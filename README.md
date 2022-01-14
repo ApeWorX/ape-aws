@@ -5,6 +5,9 @@ Ape plugin to make transactions through AWS KMS
 ## Dependencies
 
 * [python3](https://www.python.org/downloads) version 3.7 or greater, python3-dev
+* For the Ethereum Node for AWS to be created, some of the python dependencies MUST BE 
+compiled and installed through Linux
+* For the Lambda Function to be created, you MUST have docker installed
 
 ## Installation
 

@@ -42,27 +42,28 @@ with open("./README.md") as readme:
 
 
 setup(
-    name="<PYPI_NAME>",
+    name="Ape AWS KMS",
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
-    description="""<PYPI_NAME>: <SHORT_DESCRIPTION>""",
+    description="""Ape AWS KMS: Ape plugin to make transactions through AWS KMS""",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="ApeWorX Ltd.",
     author_email="admin@apeworx.io",
-    url="https://github.com/ApeWorX/<REPO_NAME>",
+    url="https://github.com/ApeWorX/ape-aws-kms",
     include_package_data=True,
     install_requires=[
         "importlib-metadata ; python_version<'3.8'",
+        "eth-ape>=0.1.0b3"
     ],  # NOTE: Add 3rd party libraries here
     python_requires=">=3.7,<4",
     extras_require=extras_require,
-    py_modules=["<ape_aws_kms>"],
+    py_modules=["ape_aws_kms"],
     license="Apache-2.0",
     zip_safe=False,
     keywords="ethereum",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    package_data={"<ape_aws_kms>": ["py.typed"]},
+    package_data={"ape_aws_kms": ["py.typed"]},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
