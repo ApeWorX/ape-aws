@@ -2,12 +2,12 @@ import boto3
 import json
 
 from datetime import datetime
-from typing import Optional, Iterator, List
+from typing import Any, Iterator, List, Optional
 
 from eth_utils import keccak, to_checksum_address
 from pydantic import BaseModel, Field
 
-from ape.api import AccountContainerAPI, AccountAPI, TransactionAPI
+from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, TransactionSignature
 from ape.utils import cached_property
 
@@ -15,7 +15,7 @@ from ape.utils import cached_property
 class AliasResponse(BaseModel):
     alias: str = Field(alias="AliasName")
     arn: str = Field(alias="AliasArn")
-    key_id: str = Field(alias="KeyId")
+    key_id: str = Field(alias="TargetKeyId")
     creation: datetime = Field(alias="CreationDate")
     last_updated: datetime = Field(alias="LastUpdatedDate")
 
@@ -29,22 +29,31 @@ class AwsAccountContainer(AccountContainerAPI):
     def raw_aliases(self) -> List[AliasResponse]:
         paginator = self.kms_client.get_paginator('list_aliases')
         pages = paginator.paginate()
+        # return [AliasResponse(**page) for page in pages for alias_data['Aliases'] in page]
         return [
-            AliasResponse(**alias_data) for page in pages for alias_data in page
+            AliasResponse(**page)
+            for alias_data in pages
+            for page in alias_data['Aliases']
+            if "alias/aws" not in page["AliasName"]
         ]
 
     @property
-    def alias(self) -> Iterator[str]:
-        # Get the alias attribute from each self.raw_aliases 
-        return map(self.raw_aliases.alias)
+    def aliases(self) -> Iterator[str]:
+        return map(lambda x: x.alias, self.raw_aliases)
 
     def __len__(self) -> int:
-        return len(self.kms_clinet.list_aliases())
+        return len(self.raw_aliases)
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
-        # Get the values required, return KmsAccount for each self.raw_alias
-        ... # self.kms_client.list_aliases -> KmsAccount
+        return map(
+            lambda x: KmsAccount(
+                alias=x.alias,
+                key_id=x.key_id,
+                key_arn=x.arn,
+            ),
+            self.raw_aliases
+        )
 
 
 class KmsAccount(AccountAPI):
@@ -69,14 +78,3 @@ class KmsAccount(AccountAPI):
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         ... # self.kms_client.sign(<convert txn to proper schema>) Gets appended to the message
-
-
-"""
-EIP 191 and EIP 712
-
-convert EIP 191 and EIP 712 messages in a utils module
-
-ethereim-kms-signer example
-
-get_sig_r_s_v()
-"""
