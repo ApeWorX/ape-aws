@@ -1,14 +1,15 @@
 import boto3
-import json
+from hashlib import sha256
 
 from datetime import datetime
 from typing import Any, Iterator, List, Optional
 
+from eth_account.messages import encode_defunct
 from eth_utils import keccak, to_checksum_address
 from pydantic import BaseModel, Field
 
 from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
-from ape.types import AddressType, MessageSignature, TransactionSignature
+from ape.types import AddressType, MessageSignature
 from ape.utils import cached_property
 
 
@@ -29,7 +30,6 @@ class AwsAccountContainer(AccountContainerAPI):
     def raw_aliases(self) -> List[AliasResponse]:
         paginator = self.kms_client.get_paginator('list_aliases')
         pages = paginator.paginate()
-        # return [AliasResponse(**page) for page in pages for alias_data['Aliases'] in page]
         return [
             AliasResponse(**page)
             for alias_data in pages
@@ -74,7 +74,16 @@ class KmsAccount(AccountAPI):
         return to_checksum_address(keccak(self.public_key)[:20])
 
     def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
-        ... # self.kms_client.sign(<convert message to proper schema>) And convert to a message signature
+        message = sha256(msg.encode()).digest()
+        response = self.kms_client.sign(
+            KeyId=self.key_id,
+            Message=message,
+            MessageType='DIGEST',
+            SigningAlgorithm='ECDSA_SHA_256',
+        )
+        return response
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
-        ... # self.kms_client.sign(<convert txn to proper schema>) Gets appended to the message
+        """
+        To be implemented
+        """
