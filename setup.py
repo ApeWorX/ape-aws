@@ -55,7 +55,7 @@ setup(
     install_requires=[
         "importlib-metadata ; python_version<'3.8'",
         "boto3>=1.34.79,<2",
-        "eth-ape>=0.1.0b3",
+        "eth-ape>=0.7.0",
         "eth-utils>=2.3.1,<3",
         "pydantic>=2.5.2,<3",
     ],  # NOTE: Add 3rd party libraries here
