@@ -1,12 +1,17 @@
 import boto3
+import ecdsa
 import json
 
 from datetime import datetime
-from hashlib import sha256
 from typing import Any, Iterator, List, Optional
 
 from eth_account import Account
-from eth_account.messages import _hash_eip191_message, SignableMessage
+from eth_account.messages import (
+    _hash_eip191_message,
+    encode_defunct,
+    encode_intended_validator,
+    encode_typed_data,  # EIP-712 message
+)
 from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
 from pydantic import BaseModel, Field
@@ -92,41 +97,26 @@ class KmsAccount(AccountAPI):
         return response
 
     def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
-        message = None
-        if isinstance(msg, str):
-            message = sha256(msg.encode()).digest()
-        elif isinstance(msg, dict):
-            message = sha256(json.dumps(msg).encode('utf-8')).digest()
-        elif isinstance(msg, bytes):
-            message = sha256(msg).digest()
-        elif isinstance(msg, int):
-            message = sha256(
-                msg.to_bytes((msg.bit_length() + 7) // 8, byteorder='big')
-            ).digest()
-        if message:
-            signable_message = SignableMessage(
-                version=(0x00).to_bytes(1, byteorder='big'),
-                header=self.address.encode('utf-8'),
-                body=message,
-            )
-            eip_message = _hash_eip191_message(signable_message)
-            response = self.sign_raw_msghash(eip_message)
-            signature = response['Signature']
-            r = signature[-64:-32]
-            s = signature[-32:]
-            for v in [27, 28]:
-                # WORK IN PROGRESS HERE
-                vrs = int(v).to_bytes(1, 'big') + r + s
-                message_signature = MessageSignature.from_vrs(vrs)
-                breakpoint()
-                try:
-                    if self.check_signature(msg, message_signature):
-                        return response
-                except:
-                    continue
+        signable_message = encode_defunct(text=msg)
+        msg_hash = _hash_eip191_message(signable_message)
+        response = self.sign_raw_msghash(msg_hash)
+        signature = response['Signature']
+        r_val, s_val = ecdsa.util.sigdecode_der(signature, ecdsa.SECP256k1.order)
+        r_bytes = r_val.to_bytes(32, byteorder='big')
+        s_bytes = s_val.to_bytes(32, byteorder='big')
+        v = signature[0]
+        if v not in [27, 28]:
+            v += 27
+        v_byte = bytes([v])
+        message_signature = MessageSignature.from_vrs(v_byte + r_bytes + s_bytes)
+        try:
+            if self.check_signature(signable_message, message_signature):
+                return response
+        except:
+            pass
 
-            raise ValueError("Signature failed to verify")
-        raise ValueError("Invalid message type")
+        raise ValueError("Signature failed to verify")
+        
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         """
