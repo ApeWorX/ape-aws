@@ -1,56 +1,29 @@
-import botocore
-from typing import Any, Optional
+from datetime import datetime
+from eth_account.messages import encode_defunct
 
-from pydantic import (
-    BaseModel,
-    Field,
-)
-from hexbytes import HexBytes
-
-from ape.types import SignableMessage
-
-from eip712.messages import EIP712Message
+from pydantic import BaseModel, Field
 
 
-class Transaction(BaseModel):
-    nonce: int
-    to: str
-    value: int
-    data: str = Field(default='0x00')
-    gas: int = Field(default=160000)
-    gas_price: str = Field(alias='gasPrice', default='0x0918400000')
+SECP256_K1_N = int("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
 
 
-class Message(BaseModel):
-    msg: Any
-    key_id: str
-    client: botocore.client.KMS
+def create_signable_message(msg):
+    """
+    To be removed, used for testing
+    """
+    return encode_defunct(text=msg)
 
-    def sign(self) -> Optional[Any]:
-        message = None
-        if isinstance(self.msg, str):
-            message = self.msg
 
-        elif isinstance(self.msg, int):
-            message = HexBytes(self.msg).hex()
+def create_transaction_message(value):
+    """
+    To be removed, used for testing
+    """
+    print(value)
 
-        elif isinstance(self.msg, bytes):
-            message = self.msg.hex()
 
-        elif isinstance(self.msg, SignableMessage):
-            message = self.msg.body
-
-        elif isinstance(self.msg, EIP712Message):
-            message = self.msg._body_
-
-        if not message:
-            return None
-
-        response = self.client.sign(
-            KeyId=self.key_id,
-            Message=self.msg,
-            MessageType='DIGEST',
-            SigningAlgorithm='ECDSA_SHA_256',
-        )
-        return response
-
+class AliasResponse(BaseModel):
+    alias: str = Field(alias="AliasName")
+    arn: str = Field(alias="AliasArn")
+    key_id: str = Field(alias="TargetKeyId")
+    creation: datetime = Field(alias="CreationDate")
+    last_updated: datetime = Field(alias="LastUpdatedDate")

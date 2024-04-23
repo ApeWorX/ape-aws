@@ -1,31 +1,19 @@
 import boto3
 import ecdsa
 
-from datetime import datetime
-from typing import Any, Iterator, List, Optional
+from typing import Iterator, List, Optional
 
 from eth_account.messages import (
     _hash_eip191_message,
-    encode_defunct,
 )
 from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
-from pydantic import BaseModel, Field
 
 from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
-from ape.types import AddressType, MessageSignature
+from ape.types import AddressType, MessageSignature, SignableMessage
 from ape.utils import cached_property
 
-
-SECP256_K1_N = int("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
-
-
-class AliasResponse(BaseModel):
-    alias: str = Field(alias="AliasName")
-    arn: str = Field(alias="AliasArn")
-    key_id: str = Field(alias="TargetKeyId")
-    creation: datetime = Field(alias="CreationDate")
-    last_updated: datetime = Field(alias="LastUpdatedDate")
+from .utils import SECP256_K1_N, AliasResponse
 
 
 class AwsAccountContainer(AccountContainerAPI):
@@ -97,25 +85,21 @@ class KmsAccount(AccountAPI):
         )
         return response['Signature']
 
-    def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
-        signable_message = encode_defunct(text=msg)
-        signature = self.sign_raw_msghash(_hash_eip191_message(signable_message))
+    def sign_message(
+        self, msg: SignableMessage, **signer_options
+    ) -> Optional[MessageSignature]:
+        signature = self.sign_raw_msghash(_hash_eip191_message(msg))
         r, s = ecdsa.util.sigdecode_der(signature, ecdsa.SECP256k1.order)
         if s > SECP256_K1_N / 2:
             s = SECP256_K1_N - s
         r = r.to_bytes(32, byteorder='big')
         s = s.to_bytes(32, byteorder='big')
-        v = signature[0] + 27
-        if self.check_signature(
-            signable_message,
-            message_signature := MessageSignature.from_vrs(bytes([v]) + r + s),
-        ):
-            return message_signature
-        elif self.check_signature(
-            signable_message,
-            message_signature := MessageSignature.from_vrs(bytes([v + 1]) + r + s),
-        ):
-            return message_signature
+        for v in [signature[0] + 27, signature[0] + 28]:
+            if self.check_signature(
+                msg,
+                message_signature := MessageSignature(v=v, r=r, s=s),
+            ):
+                return message_signature
         else:
             raise ValueError("Signature failed to verify")
 
