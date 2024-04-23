@@ -3,9 +3,7 @@ import ecdsa
 
 from typing import Iterator, List, Optional
 
-from eth_account.messages import (
-    _hash_eip191_message,
-)
+from eth_account.messages import _hash_eip191_message
 from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
 
