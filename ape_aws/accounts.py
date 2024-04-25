@@ -12,7 +12,7 @@ from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage
 from ape.utils import cached_property
 
-from .utils import SECP256_K1_N, AliasResponse, transaction
+from .utils import SECP256_K1_N, AliasResponse
 
 
 class AwsAccountContainer(AccountContainerAPI):
