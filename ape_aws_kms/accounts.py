@@ -3,7 +3,8 @@ import ecdsa
 
 from typing import Iterator, List, Optional
 
-from eth_account.messages import _hash_eip191_message
+from eth_account.messages import _hash_eip191_message, encode_defunct
+from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
 from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
 
@@ -11,7 +12,7 @@ from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage
 from ape.utils import cached_property
 
-from .utils import SECP256_K1_N, AliasResponse
+from .utils import SECP256_K1_N, AliasResponse, transaction
 
 
 class AwsAccountContainer(AccountContainerAPI):
@@ -102,14 +103,14 @@ class KmsAccount(AccountAPI):
             raise ValueError("Signature failed to verify")
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
-        """
-        To be implemented
-        EIP-191 -> Describing a text based message to sign
-
-        EIP-712 -> Subclass of EIP-191 messages. First byte is a specific value
-        implemented in the EIP712 Package
-
-        Break EIP-712 down further into a raw hash
-
-        Through EthAccount?
-        """
+        unsigned_txn = serializable_unsigned_transaction_from_dict(
+            dict(
+                nonce=txn.nonce,
+                gasPrice=txn.max_priority_fee,
+                gas=txn.max_fee,
+                to=txn.receiver,
+                value=txn.value,
+                data=txn.data
+            )
+        ).hash()
+        return self.sign_message(encode_defunct(unsigned_txn))
