@@ -70,12 +70,6 @@ class KmsAccount(AccountAPI):
         )
 
     def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
-        """
-        follow: https://github.com/ApeWorX/ape/pull/1966/files#diff-c308960cdf9376a4c05b2bb028a5a79e22c8a12b4c99633580062ec04ab613e2R60
-
-        AccountAPI has check_message to do a round trip check to make sure sig is correct and
-        that the address is returning what we want
-        """
         response = self.kms_client.sign(
             KeyId=self.key_id,
             Message=msghash,
@@ -103,6 +97,15 @@ class KmsAccount(AccountAPI):
             raise ValueError("Signature failed to verify")
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
+        """
+        Sign an EIP-155 transaction.
+
+        Args:
+            txn (``TransactionAPI``): A pydantic model of transaction data.
+
+        Returns:
+            TransactionAPI | None
+        """
         unsigned_txn = serializable_unsigned_transaction_from_dict(
             dict(
                 nonce=txn.nonce,
