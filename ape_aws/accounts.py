@@ -1,7 +1,6 @@
 from typing import Any
 
 import boto3
-import ecdsa
 
 from typing import Iterator, List, Optional
 
@@ -14,7 +13,7 @@ from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage
 from ape.utils import cached_property
 
-from .utils import SECP256_K1_N, AliasResponse
+from .utils import AliasResponse, _convert_der_to_rsv
 
 
 class AwsAccountContainer(AccountContainerAPI):
@@ -71,15 +70,6 @@ class KmsAccount(AccountAPI):
             keccak(self.public_key[-64:])[-20:].hex().lower()
         )
 
-    @staticmethod
-    def _convert_der_to_rsv(signature: bytes) -> dict:
-        r, s = ecdsa.util.sigdecode_der(signature, ecdsa.SECP256k1.order)
-        if s > SECP256_K1_N / 2:
-            s = SECP256_K1_N - s
-        r = r.to_bytes(32, byteorder='big')
-        s = s.to_bytes(32, byteorder='big')
-        return r, s
-
     def sign_raw_msghash(self, msghash: HexBytes) -> Optional[bytes]:
         response = self.kms_client.sign(
             KeyId=self.key_id,
@@ -102,7 +92,7 @@ class KmsAccount(AccountAPI):
         if isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
         signature = self.sign_raw_msghash(_hash_eip191_message(message))
-        r, s = self._convert_der_to_rsv(signature)
+        r, s = _convert_der_to_rsv(signature)
         for v in [signature[0] + 27, signature[0] + 28]:
             if self.check_signature(
                 msg,
@@ -131,7 +121,7 @@ class KmsAccount(AccountAPI):
             )
         ).hash()
         signature = self.sign_raw_msghash(unsigned_txn)
-        r, s = self._convert_der_to_rsv(signature)
+        r, s = _convert_der_to_rsv(signature)
         for v in [signature[0] + 27, signature[0] + 28]:
             if self.check_signature(
                 unsigned_txn,
