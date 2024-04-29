@@ -30,13 +30,16 @@ def create_signable_message(msg):
     return encode_defunct(text=msg)
 
 
-def _convert_der_to_rsv(signature: bytes) -> dict:
+def _convert_der_to_rsv(
+    signature: bytes, v_adjustment_factor: int = 0
+) -> dict:
     r, s = ecdsa.util.sigdecode_der(signature, ecdsa.SECP256k1.order)
     if s > SECP256_K1_N / 2:
         s = SECP256_K1_N - s
     r = r.to_bytes(32, byteorder='big')
     s = s.to_bytes(32, byteorder='big')
-    return r, s
+    v = signature[0] + v_adjustment_factor
+    return dict(v=v, r=r, s=s)
 
 
 class AliasResponse(BaseModel):

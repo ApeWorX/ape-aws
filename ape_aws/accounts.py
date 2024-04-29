@@ -70,14 +70,23 @@ class KmsAccount(AccountAPI):
             keccak(self.public_key[-64:])[-20:].hex().lower()
         )
 
-    def sign_raw_msghash(self, msghash: HexBytes) -> Optional[bytes]:
+    def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
+        if len(msghash) != 32:
+            return None
+
+        if signature := self.sign_raw_hash(msghash):
+            return MessageSignature(**_convert_der_to_rsv(signature, 27))
+
+        return None
+
+    def sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
         response = self.kms_client.sign(
             KeyId=self.key_id,
             Message=msghash,
             MessageType='DIGEST',
             SigningAlgorithm='ECDSA_SHA_256',
         )
-        return response['Signature']
+        return response.get('Signature')
 
     def sign_message(
         self, msg: Any, **signer_options
@@ -91,14 +100,12 @@ class KmsAccount(AccountAPI):
                 message = encode_defunct(text=msg)
         if isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
-        signature = self.sign_raw_msghash(_hash_eip191_message(message))
-        r, s = _convert_der_to_rsv(signature)
-        for v in [signature[0] + 27, signature[0] + 28]:
-            if self.check_signature(
-                msg,
-                message_signature := MessageSignature(v=v, r=r, s=s),
-            ):
-                return message_signature
+        msg_sig = self.sign_raw_msghash(_hash_eip191_message(message))
+        # Note: check here until we figure out v
+        if self.check_signature(msg, msg_sig):
+            return msg_sig
+        else:
+            return MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         """
@@ -120,11 +127,9 @@ class KmsAccount(AccountAPI):
                 data=txn.data
             )
         ).hash()
-        signature = self.sign_raw_msghash(unsigned_txn)
-        r, s = _convert_der_to_rsv(signature)
-        for v in [signature[0] + 27, signature[0] + 28]:
-            if self.check_signature(
-                unsigned_txn,
-                message_signature := MessageSignature(v=v, r=r, s=s),
-            ):
-                return message_signature
+        msg_sig = self.sign_raw_msghash(unsigned_txn)
+        breakpoint()
+        if self.check_signature(unsigned_txn, msg_sig):
+            return msg_sig
+        else:
+            return MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
