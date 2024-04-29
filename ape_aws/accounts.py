@@ -1,3 +1,5 @@
+from typing import Any
+
 import boto3
 import ecdsa
 
@@ -69,7 +71,16 @@ class KmsAccount(AccountAPI):
             keccak(self.public_key[-64:])[-20:].hex().lower()
         )
 
-    def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
+    @staticmethod
+    def _convert_der_to_rsv(signature: bytes) -> dict:
+        r, s = ecdsa.util.sigdecode_der(signature, ecdsa.SECP256k1.order)
+        if s > SECP256_K1_N / 2:
+            s = SECP256_K1_N - s
+        r = r.to_bytes(32, byteorder='big')
+        s = s.to_bytes(32, byteorder='big')
+        return r, s
+
+    def sign_raw_msghash(self, msghash: HexBytes) -> Optional[bytes]:
         response = self.kms_client.sign(
             KeyId=self.key_id,
             Message=msghash,
@@ -79,22 +90,25 @@ class KmsAccount(AccountAPI):
         return response['Signature']
 
     def sign_message(
-        self, msg: SignableMessage, **signer_options
+        self, msg: Any, **signer_options
     ) -> Optional[MessageSignature]:
-        signature = self.sign_raw_msghash(_hash_eip191_message(msg))
-        r, s = ecdsa.util.sigdecode_der(signature, ecdsa.SECP256k1.order)
-        if s > SECP256_K1_N / 2:
-            s = SECP256_K1_N - s
-        r = r.to_bytes(32, byteorder='big')
-        s = s.to_bytes(32, byteorder='big')
+        if isinstance(msg, SignableMessage):
+            message = msg
+        if isinstance(msg, str):
+            if msg.startswith('0x'):
+                message = encode_defunct(hexstr=msg)
+            else:
+                message = encode_defunct(text=msg)
+        if isinstance(msg, bytes):
+            message = encode_defunct(primitive=msg)
+        signature = self.sign_raw_msghash(_hash_eip191_message(message))
+        r, s = self._convert_der_to_rsv(signature)
         for v in [signature[0] + 27, signature[0] + 28]:
             if self.check_signature(
                 msg,
                 message_signature := MessageSignature(v=v, r=r, s=s),
             ):
                 return message_signature
-        else:
-            raise ValueError("Signature failed to verify")
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         """
@@ -116,4 +130,11 @@ class KmsAccount(AccountAPI):
                 data=txn.data
             )
         ).hash()
-        return self.sign_message(encode_defunct(unsigned_txn))
+        signature = self.sign_raw_msghash(unsigned_txn)
+        r, s = self._convert_der_to_rsv(signature)
+        for v in [signature[0] + 27, signature[0] + 28]:
+            if self.check_signature(
+                unsigned_txn,
+                message_signature := MessageSignature(v=v, r=r, s=s),
+            ):
+                return message_signature
