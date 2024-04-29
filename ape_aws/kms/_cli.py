@@ -99,7 +99,7 @@ def import_key(alias_name, description, tag_key, tag_value, administrators, user
             Policy=USER_KEY_POLICY.format(arn=arn)
         )
 
-    print("Key created successfully with ID: ", key_id)
+    click.echo(f"Key created successfully with ID: {key_id}")
 
 
 @kms.command()
