@@ -27,9 +27,3 @@ def list_users():
     iam_client = boto3.client('iam')
     response = iam_client.list_users()
     click.echo(f'Users: {response.get("Users")}')
-
-
-@admin.command()
-@click.option('--dictionary', '-d', multiple=True)
-def check_this(dictionary):
-    print(dictionary)

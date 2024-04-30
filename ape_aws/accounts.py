@@ -10,7 +10,7 @@ from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
 
 from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
-from ape.types import AddressType, MessageSignature, SignableMessage
+from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
 from ape.utils import cached_property
 
 from .utils import AliasResponse, _convert_der_to_rsv
@@ -107,7 +107,9 @@ class KmsAccount(AccountAPI):
         else:
             return MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
 
-    def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
+    def sign_transaction(
+        self, txn: TransactionAPI, **signer_options
+    ) -> Optional[TransactionAPI]:
         """
         Sign an EIP-155 transaction.
 
@@ -127,9 +129,8 @@ class KmsAccount(AccountAPI):
                 data=txn.data
             )
         ).hash()
-        msg_sig = self.sign_raw_msghash(unsigned_txn)
-        breakpoint()
-        if self.check_signature(unsigned_txn, msg_sig):
-            return msg_sig
-        else:
-            return MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
+        msg_sig = self.sign_raw_hash(unsigned_txn)
+        txn.signature = TransactionSignature(
+            **_convert_der_to_rsv(msg_sig, (2 * txn.chain_id + 35) if txn.chain_id else 27)
+        )
+        return txn
