@@ -59,6 +59,9 @@ setup(
         "eth-utils>=2.3.1,<3",
         "pydantic>=2.5.2,<3",
     ],  # NOTE: Add 3rd party libraries here
+    entry_points={
+        "ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]
+    },
     python_requires=">=3.7,<4",
     extras_require=extras_require,
     py_modules=["ape_aws_kms"],
