@@ -100,7 +100,10 @@ class KmsAccount(AccountAPI):
                 message = encode_defunct(text=msg)
         if isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
-        return self.sign_raw_msghash(_hash_eip191_message(message))
+        message = self.sign_raw_msghash(_hash_eip191_message(message))
+        breakpoint()
+        print(self.check_signature(msg, message))
+        return message
 
     def sign_transaction(
         self, txn: TransactionAPI, **signer_options
