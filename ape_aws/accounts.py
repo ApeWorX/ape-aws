@@ -14,12 +14,13 @@ from ape.types import AddressType, MessageSignature, SignableMessage, Transactio
 from ape.utils import cached_property
 
 from .utils import AliasResponse, _convert_der_to_rsv
+from .client import client
 
 
 class AwsAccountContainer(AccountContainerAPI):
     @cached_property
     def kms_client(self):
-        return boto3.client('kms')
+        return client.kms_client
 
     @cached_property
     def raw_aliases(self) -> List[AliasResponse]:
@@ -58,7 +59,7 @@ class KmsAccount(AccountAPI):
 
     @cached_property
     def kms_client(self):
-        return boto3.client('kms')
+        return client.kms_client
 
     @cached_property
     def public_key(self):
@@ -100,10 +101,11 @@ class KmsAccount(AccountAPI):
                 message = encode_defunct(text=msg)
         if isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
-        message = self.sign_raw_msghash(_hash_eip191_message(message))
-        breakpoint()
-        print(self.check_signature(msg, message))
-        return message
+        msg_sig = self.sign_raw_msghash(_hash_eip191_message(message))
+        if self.check_signature(msg, msg_sig):
+            return msg_sig
+        else:
+            return MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
 
     def sign_transaction(
         self, txn: TransactionAPI, **signer_options

@@ -1,6 +1,7 @@
 import click
 
 from ape_aws.accounts import KmsAccount, AwsAccountContainer
+from ape_aws.client import client
 
 
 ADMIN_KEY_POLICY = """{
@@ -75,8 +76,7 @@ def create_key(
         alias_name str: The alias of the key you intend to create
         description str: The description of the key you intend to create.
     """
-    aws_account = AwsAccountContainer(data_folder='./', account_type=KmsAccount)
-    response = aws_account.kms_client.create_key(
+    response = client.kms_client.create_key(
         Description=description,
         KeyUsage='SIGN_VERIFY',
         KeySpec='ECC_SECG_P256K1',
@@ -84,7 +84,7 @@ def create_key(
         MultiRegion=False,
     )
     key_id = response['KeyMetadata']['KeyId']
-    aws_account.kms_client.create_alias(
+    client.kms_client.create_alias(
         AliasName=f'alias/{alias_name}',
         TargetKeyId=key_id,
     )
@@ -93,18 +93,18 @@ def create_key(
         for k_v in tags:
             k, v = k_v.split('=')
             tags_list.append(dict(k=v))
-        aws_account.kms_client.tag_resource(
+        client.kms_client.tag_resource(
             KeyId=key_id,
             Tags=tags_list,
         )
     for arn in administrators:
-        aws_account.kms_client.put_key_policy(
+        client.kms_client.put_key_policy(
             KeyId=key_id,
             PolicyName='default',
             Policy=ADMIN_KEY_POLICY.format(arn=arn)
         )
     for arn in users:
-        aws_account.kms_client.put_key_policy(
+        client.kms_client.put_key_policy(
             KeyId=key_id,
             PolicyName='default',
             Policy=USER_KEY_POLICY.format(arn=arn)
