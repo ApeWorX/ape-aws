@@ -76,10 +76,11 @@ class KmsAccount(AccountAPI):
         if isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
         msg_sig = self.sign_raw_msghash(_hash_eip191_message(message))
-        if self.check_signature(msg, msg_sig):
-            return msg_sig
-        else:
-            return MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
+        # TODO: Figure out how to properly compute v
+        if not self.check_signature(msg, msg_sig):
+            msg_sig = MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
+
+        return msg_sig
 
     def sign_transaction(
         self, txn: TransactionAPI, **signer_options
@@ -107,4 +108,12 @@ class KmsAccount(AccountAPI):
         txn.signature = TransactionSignature(
             **_convert_der_to_rsv(msg_sig, (2 * txn.chain_id + 35) if txn.chain_id else 27)
         )
+        # TODO: Figure out how to properly compute v
+        if not self.check_signature(txn):
+            txn.signature = TransactionSignature(
+                v=txn.signature.v + 1,
+                r=txn.signature.r,
+                s=txn.signature.s,
+            )
+
         return txn
