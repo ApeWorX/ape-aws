@@ -1,6 +1,6 @@
 from typing import Any
 
-from typing import Iterator, List, Optional
+from typing import Iterator, Optional
 
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
@@ -11,29 +11,18 @@ from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
 from ape.utils import cached_property
 
-from .utils import AliasResponse, _convert_der_to_rsv
+from .utils import _convert_der_to_rsv
 from .client import kms_client
 
 
 class AwsAccountContainer(AccountContainerAPI):
 
-    @cached_property
-    def raw_aliases(self) -> List[AliasResponse]:
-        paginator = kms_client.client.get_paginator('list_aliases')
-        pages = paginator.paginate()
-        return [
-            AliasResponse(**page)
-            for alias_data in pages
-            for page in alias_data['Aliases']
-            if "alias/aws" not in page["AliasName"]
-        ]
-
     @property
     def aliases(self) -> Iterator[str]:
-        return map(lambda x: x.alias, self.raw_aliases)
+        return map(lambda x: x.alias, kms_client.raw_aliases)
 
     def __len__(self) -> int:
-        return len(self.raw_aliases)
+        return len(kms_client.raw_aliases)
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
@@ -43,7 +32,7 @@ class AwsAccountContainer(AccountContainerAPI):
                 key_id=x.key_id,
                 key_arn=x.arn,
             ),
-            self.raw_aliases
+            kms_client.raw_aliases
         )
 
 
@@ -54,7 +43,7 @@ class KmsAccount(AccountAPI):
 
     @cached_property
     def public_key(self):
-        return kms_client.client.get_public_key(KeyId=self.key_id)["PublicKey"]
+        return kms_client.get_public_key(self.key_id)
 
     @cached_property
     def address(self) -> AddressType:
@@ -63,13 +52,7 @@ class KmsAccount(AccountAPI):
         )
 
     def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
-        response = kms_client.client.sign(
-            KeyId=self.key_id,
-            Message=msghash,
-            MessageType='DIGEST',
-            SigningAlgorithm='ECDSA_SHA_256',
-        )
-        return response.get('Signature')
+        return kms_client.sign(self.key_id, msghash)
 
     def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
         if len(msghash) != 32:
