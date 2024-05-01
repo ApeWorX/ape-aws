@@ -71,7 +71,7 @@ class KmsAccount(AccountAPI):
             keccak(self.public_key[-64:])[-20:].hex().lower()
         )
 
-    def sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
+    def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
         response = self.kms_client.sign(
             KeyId=self.key_id,
             Message=msghash,
@@ -84,7 +84,7 @@ class KmsAccount(AccountAPI):
         if len(msghash) != 32:
             return None
 
-        if signature := self.sign_raw_hash(msghash):
+        if signature := self._sign_raw_hash(msghash):
             return MessageSignature(**_convert_der_to_rsv(signature, 27))
 
         return None
@@ -129,7 +129,7 @@ class KmsAccount(AccountAPI):
                 data=txn.data
             )
         ).hash()
-        msg_sig = self.sign_raw_hash(unsigned_txn)
+        msg_sig = self._sign_raw_hash(unsigned_txn)
         txn.signature = TransactionSignature(
             **_convert_der_to_rsv(msg_sig, (2 * txn.chain_id + 35) if txn.chain_id else 27)
         )
