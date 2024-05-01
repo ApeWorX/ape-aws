@@ -35,7 +35,7 @@ def kms():
     """Manage AWS KMS keys"""
 
 
-@kms.command()
+@kms.command(name="create")
 @ape_cli_context()
 @click.option(
     "-a",
@@ -116,7 +116,7 @@ def create_key(
     cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
 
 
-@kms.command()
+@kms.command(name="delete")
 @ape_cli_context()
 @click.argument("alias_name")
 @click.option("-d", "--days", default=30, help="Number of days until key is deactivated")
