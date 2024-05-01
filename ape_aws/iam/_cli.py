@@ -1,5 +1,7 @@
 import click
 
+from ape.cli import ape_cli_context
+
 from ape_aws.client import iam_client
 
 
@@ -9,20 +11,12 @@ def iam():
 
 
 @iam.command()
-def list_admins():
-    response = iam_client.client.list_users()
-    admins = []
-    for user in response['Users']:
-        user_name = user['UserName']
-        user_policies = iam_client.client.list_attached_user_policies(UserName=user_name)
-        for policy in user_policies['AttachedPolicies']:
-            if policy['PolicyName'] == 'AdministratorAccess':
-                admins.append(user_name)
-
-    click.echo(f'Administrators: {admins}')
+@ape_cli_context()
+def list_admins(cli_ctx):
+    cli_ctx.logger.success(f'Administrators: {iam_client.list_admins()}')
 
 
 @iam.command()
-def list_users():
-    response = iam_client.client.list_users()
-    click.echo(f'Users: {response.get("Users")}')
+@ape_cli_context()
+def list_users(cli_ctx):
+    cli_ctx.logger.success(f'Users: {iam_client.list_users()}')
