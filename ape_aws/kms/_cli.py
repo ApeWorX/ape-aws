@@ -130,7 +130,7 @@ def schedule_delete_key(cli_ctx, alias_name, days):
             kms_account = account
 
     if not kms_account:
-        cli_ctx.about(f"No KMS Key with alias name: {alias_name}")
+        cli_ctx.abort(f"No KMS Key with alias name: {alias_name}")
 
     kms_account.kms_client.delete_alias(AliasName=alias_name)
     kms_account.kms_client.schedule_key_deletion(
