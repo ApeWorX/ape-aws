@@ -12,17 +12,14 @@ from ape.types import AddressType, MessageSignature, SignableMessage, Transactio
 from ape.utils import cached_property
 
 from .utils import AliasResponse, _convert_der_to_rsv
-from .client import client
+from .client import kms_client
 
 
 class AwsAccountContainer(AccountContainerAPI):
-    @cached_property
-    def kms_client(self):
-        return client.kms_client
 
     @cached_property
     def raw_aliases(self) -> List[AliasResponse]:
-        paginator = self.kms_client.get_paginator('list_aliases')
+        paginator = kms_client.client.get_paginator('list_aliases')
         pages = paginator.paginate()
         return [
             AliasResponse(**page)
@@ -56,12 +53,8 @@ class KmsAccount(AccountAPI):
     key_arn: str
 
     @cached_property
-    def kms_client(self):
-        return client.kms_client
-
-    @cached_property
     def public_key(self):
-        return self.kms_client.get_public_key(KeyId=self.key_id)["PublicKey"]
+        return kms_client.client.get_public_key(KeyId=self.key_id)["PublicKey"]
 
     @cached_property
     def address(self) -> AddressType:
@@ -70,7 +63,7 @@ class KmsAccount(AccountAPI):
         )
 
     def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
-        response = self.kms_client.sign(
+        response = kms_client.client.sign(
             KeyId=self.key_id,
             Message=msghash,
             MessageType='DIGEST',
