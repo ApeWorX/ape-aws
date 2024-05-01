@@ -2,12 +2,12 @@ import boto3
 import click
 
 
-@click.group("admin")
-def admin():
+@click.group("iam")
+def iam():
     """Manage AWS Admin information"""
 
 
-@admin.command()
+@iam.command()
 def list_admins():
     iam_client = boto3.client('iam')
     response = iam_client.list_users()
@@ -22,7 +22,7 @@ def list_admins():
     click.echo(f'Administrators: {admins}')
 
 
-@admin.command()
+@iam.command()
 def list_users():
     iam_client = boto3.client('iam')
     response = iam_client.list_users()
