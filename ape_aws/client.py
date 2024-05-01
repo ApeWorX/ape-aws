@@ -2,17 +2,17 @@ import boto3
 
 from pydantic import BaseModel
 
-from ape.utils import cached_property
-
 
 class Client(BaseModel):
-    @cached_property
-    def kms_client(self):
-        return boto3.client('kms')
+    client_name: str
+    _client: boto3.client = None
 
-    @cached_property
-    def iam_client(self):
-        return boto3.client('iam')
+    @property
+    def client(self):
+        if not self._client:
+            self._client = boto3.client(self.client_name)
+        return self._client
 
 
-client = Client()
+kms_client = Client(client_name='kms')
+iam_client = Client(client_name='iam')

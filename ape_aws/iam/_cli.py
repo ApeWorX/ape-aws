@@ -1,5 +1,6 @@
-import boto3
 import click
+
+from ape_aws.client import iam_client
 
 
 @click.group("iam")
@@ -9,12 +10,11 @@ def iam():
 
 @iam.command()
 def list_admins():
-    iam_client = boto3.client('iam')
-    response = iam_client.list_users()
+    response = iam_client.client.list_users()
     admins = []
     for user in response['Users']:
         user_name = user['UserName']
-        user_policies = iam_client.list_attached_user_policies(UserName=user_name)
+        user_policies = iam_client.client.list_attached_user_policies(UserName=user_name)
         for policy in user_policies['AttachedPolicies']:
             if policy['PolicyName'] == 'AdministratorAccess':
                 admins.append(user_name)
@@ -24,6 +24,5 @@ def list_admins():
 
 @iam.command()
 def list_users():
-    iam_client = boto3.client('iam')
-    response = iam_client.list_users()
+    response = iam_client.client.list_users()
     click.echo(f'Users: {response.get("Users")}')
