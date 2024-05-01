@@ -9,7 +9,6 @@ from eth_utils import keccak, to_checksum_address
 
 from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
-from ape.utils import cached_property
 
 from .utils import _convert_der_to_rsv
 from .client import kms_client
@@ -41,11 +40,11 @@ class KmsAccount(AccountAPI):
     key_id: str
     key_arn: str
 
-    @cached_property
+    @property
     def public_key(self):
         return kms_client.get_public_key(self.key_id)
 
-    @cached_property
+    @property
     def address(self) -> AddressType:
         return to_checksum_address(
             keccak(self.public_key[-64:])[-20:].hex().lower()
