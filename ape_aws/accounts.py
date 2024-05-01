@@ -58,7 +58,7 @@ class KmsAccount(AccountAPI):
             return None
 
         if signature := self._sign_raw_hash(msghash):
-            return MessageSignature(**_convert_der_to_rsv(signature, 27))
+            return MessageSignature(**_convert_der_to_rsv(signature, signature[0] + 27))
 
         return None
 
