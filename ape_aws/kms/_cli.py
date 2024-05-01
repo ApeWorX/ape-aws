@@ -2,6 +2,7 @@ import click
 
 from ape_aws.accounts import KmsAccount, AwsAccountContainer
 from ape_aws.client import client
+from ape.cli import ape_cli_context
 
 
 ADMIN_KEY_POLICY = """{
@@ -35,6 +36,7 @@ def kms():
 
 
 @kms.command()
+@ape_cli_context()
 @click.option(
     "-a",
     "--admin",
@@ -62,6 +64,7 @@ def kms():
 @click.argument("alias_name")
 @click.argument("description")
 def create_key(
+    cli_ctx,
     alias_name: str,
     description: str,
     administrators: list[str],
@@ -110,13 +113,14 @@ def create_key(
             Policy=USER_KEY_POLICY.format(arn=arn)
         )
 
-    click.echo(f"Key created successfully with ID: {key_id}")
+    cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
 
 
 @kms.command()
+@ape_cli_context()
 @click.argument("alias_name")
 @click.option("-d", "--days", default=30, help="Number of days until key is deactivated")
-def schedule_delete_key(alias_name, days):
+def schedule_delete_key(cli_ctx, alias_name, days):
     if "alias" not in alias_name:
         alias_name = f"alias/{alias_name}"
     aws_accounts = AwsAccountContainer(data_folder='./', account_type=KmsAccount)
@@ -132,4 +136,4 @@ def schedule_delete_key(alias_name, days):
     kms_account.kms_client.schedule_key_deletion(
         KeyId=kms_account.key_id, PendingWindowInDays=days
     )
-    click.echo(f"Key {kms_account.key_alias} scheduled for deletion")
+    cli_ctx.logger.success(f"Key {kms_account.key_alias} scheduled for deletion")
