@@ -17,11 +17,3 @@ def _convert_der_to_rsv(
     r = r.to_bytes(32, byteorder='big')
     s = s.to_bytes(32, byteorder='big')
     return dict(v=v, r=r, s=s)
-
-
-class AliasResponse(BaseModel):
-    alias: str = Field(alias="AliasName")
-    arn: str = Field(alias="AliasArn")
-    key_id: str = Field(alias="TargetKeyId")
-    creation: datetime = Field(alias="CreationDate")
-    last_updated: datetime = Field(alias="LastUpdatedDate")
