@@ -71,17 +71,10 @@ class DeleteKey(KeyBaseModel):
     days: int = 30
 
 
-class Client:
-
-    def __init__(self, client_name: str):
-        self.client_name = client_name
-        self.client = boto3.client(self.client_name)
-
-
-class KmsClient(Client):
+class KmsClient:
 
     def __init__(self):
-        super().__init__(client_name='kms')
+        self.client = boto3.client('kms')
 
     @property
     def raw_aliases(self) -> list[AliasResponse]:
@@ -142,10 +135,10 @@ class KmsClient(Client):
         return key_spec.alias
 
 
-class IamClient(Client):
+class IamClient:
 
     def __init__(self):
-        super().__init__(client_name='iam')
+        self.client = boto3.client('iam')
 
     def list_users(self):
         result = self.client.list_users()
