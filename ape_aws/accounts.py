@@ -1,6 +1,6 @@
-from typing import Any
+from pydantic import BaseModel, Field
 
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
@@ -12,6 +12,71 @@ from ape.types import AddressType, MessageSignature, SignableMessage, Transactio
 
 from .utils import _convert_der_to_rsv
 from .client import kms_client
+
+
+class KeyBaseModel(BaseModel):
+    alias: str = Field(required=True)
+
+
+class CreateKeyModel(KeyBaseModel):
+    description: str | None = Field(default=None, required=False)
+    policy: str | None = Field(default=None, required=False)
+    key_usage: str | None = Field(default='SIGN_VERIFY', required=False)
+    key_spec: str | None = Field(default='ECC_SECG_P256K1', required=False)
+    admins: list[str] | None = Field(required=False)
+    users: list[str] | None = Field(required=False)
+    tags: list[dict[str, str]] | None = Field(required=False)
+    multi_region: bool | None = Field(default=False, required=False)
+    ADMIN_KEY_POLICY: str | None = """{
+        "Version": "2012-10-17",
+        "Id": "key-default-1",
+        "Statement": [{
+            "Sid": "Enable IAM User Permissions",
+            "Effect": "Allow",
+            "Principal": {"AWS": "{arn}"},
+            "Action": "kms:*",
+            "Resource": "*"
+        }]
+    }"""
+    USER_KEY_POLICY: str | None = """{
+        "Version": "2012-10-17",
+        "Id": "key-default-1",
+        "Statement": [{
+            "Sid": "Allow use of the key",
+            "Effect": "Allow",
+            "Principal": {"AWS": "{arn}"},
+            "Action": ["kms:Sign", "kms:Verify"],
+            "Resource": "*"
+        }]
+    }"""
+
+
+class CreateKey(CreateKeyModel):
+    origin: str = 'AWS_KMS'
+
+
+class ImportKey(CreateKeyModel):
+    origin: str = 'EXTERNAL'
+
+
+class DeleteKey(KeyBaseModel):
+    days: int | None = Field(default=30, required=False)
+
+    @property
+    def kms_account(self):
+        if "alias" not in self.alias:
+            alias_name = f"alias/{self.alias}"
+        aws_accounts = AwsAccountContainer(data_folder='./', account_type=KmsAccount)
+        kms_account = None
+        for account in aws_accounts.accounts:
+            if account.key_alias == alias_name:
+                kms_account = account
+
+        return kms_account
+
+    @property
+    def key_id(self):
+        return self.kms_account.key_id
 
 
 class AwsAccountContainer(AccountContainerAPI):
