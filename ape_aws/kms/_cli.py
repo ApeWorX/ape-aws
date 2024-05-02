@@ -1,7 +1,7 @@
 import click
 
 from ape_aws.accounts import KmsAccount, AwsAccountContainer
-from ape_aws.client import kms_client
+from ape_aws.client import kms_client, CreateKey, DeleteKey
 from ape.cli import ape_cli_context
 
 
@@ -79,40 +79,19 @@ def create_key(
         alias_name str: The alias of the key you intend to create
         description str: The description of the key you intend to create.
     """
-    response = kms_client.client.create_key(
-        Description=description,
-        KeyUsage='SIGN_VERIFY',
-        KeySpec='ECC_SECG_P256K1',
-        Origin='AWS_KMS',
-        MultiRegion=False,
-    )
-    key_id = response['KeyMetadata']['KeyId']
-    kms_client.client.create_alias(
-        AliasName=f'alias/{alias_name}',
-        TargetKeyId=key_id,
-    )
     if tags:
         tags_list = []
         for k_v in tags:
             k, v = k_v.split('=')
             tags_list.append(dict(k=v))
-        kms_client.client.tag_resource(
-            KeyId=key_id,
-            Tags=tags_list,
-        )
-    for arn in administrators:
-        kms_client.client.put_key_policy(
-            KeyId=key_id,
-            PolicyName='default',
-            Policy=ADMIN_KEY_POLICY.format(arn=arn)
-        )
-    for arn in users:
-        kms_client.client.put_key_policy(
-            KeyId=key_id,
-            PolicyName='default',
-            Policy=USER_KEY_POLICY.format(arn=arn)
-        )
-
+    key_spec = CreateKey(
+        alias=alias_name,
+        description=description,
+        admins=administrators,
+        users=users,
+        tags=tags_list if tags else None,
+    )
+    key_id = kms_client.create_key(key_spec)
     cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
 
 
@@ -132,8 +111,6 @@ def schedule_delete_key(cli_ctx, alias_name, days):
     if not kms_account:
         cli_ctx.abort(f"No KMS Key with alias name: {alias_name}")
 
-    kms_client.client.delete_alias(AliasName=alias_name)
-    kms_client.client.schedule_key_deletion(
-        KeyId=kms_account.key_id, PendingWindowInDays=days
-    )
-    cli_ctx.logger.success(f"Key {kms_account.key_alias} scheduled for deletion")
+    delete_key_spec = DeleteKey(alias=alias_name, key_id=kms_account.key_id, days=days)
+    key_alias = kms_client.delete_key(delete_key_spec)
+    cli_ctx.logger.success(f"Key {key_alias} scheduled for deletion")
