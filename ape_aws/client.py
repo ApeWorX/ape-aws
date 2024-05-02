@@ -13,19 +13,19 @@ class AliasResponse(BaseModel):
 
 
 class KeyBaseModel(BaseModel):
-    alias: str = Field(required=True)
+    alias: str
 
 
 class CreateKeyModel(KeyBaseModel):
     description: str | None = Field(default=None, required=False)
     policy: str | None = Field(default=None, required=False)
-    key_usage: str | None = Field(default='SIGN_VERIFY', required=False)
-    key_spec: str | None = Field(default='ECC_SECG_P256K1', required=False)
+    key_usage: str = 'SIGN_VERIFY'
+    key_spec: str = 'ECC_SECG_P256K1'
     admins: list[str] | None = Field(required=False)
     users: list[str] | None = Field(required=False)
     tags: list[dict[str, str]] | None = Field(required=False)
     multi_region: bool | None = Field(default=False, required=False)
-    ADMIN_KEY_POLICY: str | None = """{
+    ADMIN_KEY_POLICY: str = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
         "Statement": [{
@@ -36,7 +36,7 @@ class CreateKeyModel(KeyBaseModel):
             "Resource": "*"
         }]
     }"""
-    USER_KEY_POLICY: str | None = """{
+    USER_KEY_POLICY: str = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
         "Statement": [{
@@ -59,7 +59,7 @@ class ImportKey(CreateKeyModel):
 
 class DeleteKey(KeyBaseModel):
     key_id: str
-    days: int | None = Field(default=30, required=False)
+    days: int = 30
 
 
 class Client:
