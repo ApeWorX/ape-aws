@@ -17,14 +17,15 @@ class KeyBaseModel(BaseModel):
 
 
 class CreateKeyModel(KeyBaseModel):
-    description: str | None = Field(default=None, required=False)
-    policy: str | None = Field(default=None, required=False)
-    key_usage: str = 'SIGN_VERIFY'
-    key_spec: str = 'ECC_SECG_P256K1'
-    admins: list[str] | None = Field(required=False)
-    users: list[str] | None = Field(required=False)
-    tags: list[dict[str, str]] | None = Field(required=False)
-    multi_region: bool | None = Field(default=False, required=False)
+    description: str = Field(alias='Description')
+    policy: str | None = Field(default=None, required=False, alias='Policy')
+    key_usage: str = Field(default='SIGN_VERIFY', alias='KeyUsage')
+    key_spec: str = Field(default='ECC_SECG_P256K1', alias='KeySpec')
+    admins: list[str] | None
+    users: list[str] | None
+    tags: list[dict[str, str]] | None = Field(default=None, alias='Tags')
+    multi_region: bool | None = Field(default=None, required=False, alias="MultiRegion")
+    origin: str = Field(alias='Origin')
     ADMIN_KEY_POLICY: str = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
@@ -48,13 +49,21 @@ class CreateKeyModel(KeyBaseModel):
         }]
     }"""
 
+    def to_aws_dict(self):
+        alias_dict = {}
+        for k, v in self.model_dump().items():
+            field = self.model_fields[k]
+            if field.alias and v:
+                alias_dict[field.alias] = v
+        return alias_dict
+
 
 class CreateKey(CreateKeyModel):
-    origin: str = 'AWS_KMS'
+    origin: str = Field('AWS_KMS', alias='Origin')
 
 
 class ImportKey(CreateKeyModel):
-    origin: str = 'EXTERNAL'
+    origin: str = Field('EXTERNAL', alias='Origin')
 
 
 class DeleteKey(KeyBaseModel):
@@ -98,13 +107,7 @@ class KmsClient(Client):
         return response.get('Signature')
 
     def create_key(self, key_spec: CreateKey):
-        response = self.client.create_key(
-            Description=key_spec.description,
-            KeyUsage=key_spec.key_usage,
-            KeySpec=key_spec.key_spec,
-            Origin=key_spec.origin,
-            MultiRegion=key_spec.multi_region,
-        )
+        response = self.client.create_key(**key_spec.to_aws_dict())
         key_id = response['KeyMetadata']['KeyId']
         self.client.create_alias(
             AliasName=f'alias/{key_spec.alias}',

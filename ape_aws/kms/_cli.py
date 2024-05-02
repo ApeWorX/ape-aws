@@ -61,10 +61,10 @@ def create_key(
             tags_list.append(dict(k=v))
     key_spec = CreateKey(
         alias=alias_name,
-        description=description,
+        Description=description,
         admins=administrators,
         users=users,
-        tags=tags_list if tags else None,
+        Tags=tags_list if tags else None,
     )
     key_id = kms_client.create_key(key_spec)
     cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
