@@ -1,7 +1,15 @@
 import boto3
+
+from datetime import datetime
 from pydantic import BaseModel, Field
 
-from .utils import AliasResponse
+
+class AliasResponse(BaseModel):
+    alias: str = Field(alias="AliasName")
+    arn: str = Field(alias="AliasArn")
+    key_id: str = Field(alias="TargetKeyId")
+    creation: datetime = Field(alias="CreationDate")
+    last_updated: datetime = Field(alias="LastUpdatedDate")
 
 
 class KeyBaseModel(BaseModel):
