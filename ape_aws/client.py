@@ -18,13 +18,13 @@ class KeyBaseModel(BaseModel):
 
 class CreateKeyModel(KeyBaseModel):
     description: str = Field(alias='Description')
-    policy: str | None = Field(default=None, required=False, alias='Policy')
+    policy: str | None = Field(default=None, alias='Policy')
     key_usage: str = Field(default='SIGN_VERIFY', alias='KeyUsage')
     key_spec: str = Field(default='ECC_SECG_P256K1', alias='KeySpec')
-    admins: list[str] | None
-    users: list[str] | None
+    admins: list[str] = []
+    users: list[str] = []
     tags: list[dict[str, str]] | None = Field(default=None, alias='Tags')
-    multi_region: bool | None = Field(default=None, required=False, alias="MultiRegion")
+    multi_region: bool | None = Field(default=None, alias="MultiRegion")
     origin: str = Field(alias='Origin')
     ADMIN_KEY_POLICY: str = """{
         "Version": "2012-10-17",
@@ -59,11 +59,11 @@ class CreateKeyModel(KeyBaseModel):
 
 
 class CreateKey(CreateKeyModel):
-    origin: str = Field('AWS_KMS', alias='Origin')
+    origin: str = Field(default='AWS_KMS', alias='Origin')
 
 
 class ImportKey(CreateKeyModel):
-    origin: str = Field('EXTERNAL', alias='Origin')
+    origin: str = Field(default='EXTERNAL', alias='Origin')
 
 
 class DeleteKey(KeyBaseModel):
