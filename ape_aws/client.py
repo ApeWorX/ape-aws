@@ -1,3 +1,4 @@
+from typing import ClassVar
 import boto3
 
 from datetime import datetime
@@ -26,7 +27,7 @@ class CreateKeyModel(KeyBaseModel):
     tags: list[dict[str, str]] | None = Field(default=None, alias='Tags')
     multi_region: bool | None = Field(default=None, alias="MultiRegion")
     origin: str = Field(alias='Origin')
-    ADMIN_KEY_POLICY: str = """{
+    ADMIN_KEY_POLICY: ClassVar[str] = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
         "Statement": [{
@@ -37,7 +38,7 @@ class CreateKeyModel(KeyBaseModel):
             "Resource": "*"
         }]
     }"""
-    USER_KEY_POLICY: str = """{
+    USER_KEY_POLICY: ClassVar[str] = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
         "Statement": [{
