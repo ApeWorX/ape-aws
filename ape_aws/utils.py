@@ -1,7 +1,4 @@
 import ecdsa
-from datetime import datetime
-
-from pydantic import BaseModel, Field
 
 
 SECP256_K1_N = int("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
