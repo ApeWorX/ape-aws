@@ -84,6 +84,7 @@ class KmsAccount(AccountAPI):
     ) -> Optional[TransactionAPI]:
         """
         Sign an EIP-155 transaction.
+        CHECK TYPE 0 transactions.
 
         Args:
             txn (``TransactionAPI``): A pydantic model of transaction data.
