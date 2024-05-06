@@ -1,6 +1,5 @@
 import click
 
-from ape_aws.accounts import KmsAccount, AwsAccountContainer
 from ape_aws.client import kms_client, CreateKey, DeleteKey
 from ape.cli import ape_cli_context
 
@@ -77,10 +76,9 @@ def create_key(
 def schedule_delete_key(cli_ctx, alias_name, days):
     if "alias" not in alias_name:
         alias_name = f"alias/{alias_name}"
-    aws_accounts = AwsAccountContainer(data_folder='./', account_type=KmsAccount)
     kms_account = None
-    for account in aws_accounts.accounts:
-        if account.key_alias == alias_name:
+    for account in kms_client.raw_aliases:
+        if account.alias == alias_name:
             kms_account = account
 
     if not kms_account:
