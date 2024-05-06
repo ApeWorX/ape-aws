@@ -1,4 +1,4 @@
-from ape.types import MessageSignature
+from ape.types import MessageSignature, TransactionSignature
 
 import pytest
 from eth_account.messages import encode_defunct
@@ -40,3 +40,8 @@ def kms_account(aws_account_container):
 def test_signing_message(kms_account, string_message):
     val = kms_account.sign_message(string_message)
     assert isinstance(val, MessageSignature)
+
+
+def test_signing_transaction(kms_account, transaction):
+    val = kms_account.sign_transaction(transaction)
+    assert isinstance(val, TransactionSignature)
