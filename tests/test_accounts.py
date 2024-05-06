@@ -4,7 +4,7 @@ import pytest
 from eth_account.messages import encode_defunct
 
 from ape_aws.accounts import AwsAccountContainer, KmsAccount
-from ape_ethereum.transactions import DynamicFeeTransaction
+from ape_ethereum.transactions import StaticFeeTransaction
 
 
 @pytest.fixture(scope="session")
@@ -15,11 +15,11 @@ def transaction():
         "value": 1,
         "data": '0x00',
         "receiver": "0xa5D3241A1591061F2a4bB69CA0215F66520E67cf",
-        "type": 2,
-        "max_fee": 100000000000,
-        "max_priority_fee": 300000000000,
+        "type": 0,
+        "gas_limit": 1000000,
+        "gas_price": 300000000000,
     }
-    return DynamicFeeTransaction(**txn)
+    return StaticFeeTransaction(**txn)
 
 
 @pytest.fixture(scope="session")
@@ -44,4 +44,4 @@ def test_signing_message(kms_account, string_message):
 
 def test_signing_transaction(kms_account, transaction):
     val = kms_account.sign_transaction(transaction)
-    assert isinstance(val, TransactionSignature)
+    assert isinstance(val.signature, TransactionSignature)
