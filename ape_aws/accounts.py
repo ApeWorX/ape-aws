@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Any, Iterator, Optional
 
 from eth_account.messages import _hash_eip191_message, encode_defunct
@@ -42,7 +43,7 @@ class KmsAccount(AccountAPI):
     def public_key(self):
         return kms_client.get_public_key(self.key_id)
 
-    @property
+    @cached_property
     def address(self) -> AddressType:
         return to_checksum_address(
             keccak(self.public_key[-64:])[-20:].hex().lower()
