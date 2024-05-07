@@ -72,4 +72,4 @@ def schedule_delete_key(cli_ctx, alias_name, days):
 
     delete_key_spec = DeleteKey(alias=alias_name, key_id=kms_account.key_id, days=days)
     key_alias = kms_client.delete_key(delete_key_spec)
-    cli_ctx.logger.success(f"Key {key_alias} scheduled for deletion")
+    cli_ctx.logger.success(f"Key {key_alias} scheduled for deletion in {days} days")
