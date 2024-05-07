@@ -105,7 +105,7 @@ class KmsAccount(AccountAPI):
         ).hash()
         msg_sig = self._sign_raw_hash(unsigned_txn)
         txn.signature = TransactionSignature(
-            **_convert_der_to_rsv(msg_sig, 27)  # (2 * txn.chain_id + 35) if txn.chain_id else 27)
+            **_convert_der_to_rsv(msg_sig, (2 * txn.chain_id + 35) if txn.chain_id else 27)
         )
         # TODO: Figure out how to properly compute v
         if not self.check_signature(txn):

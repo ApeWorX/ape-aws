@@ -10,7 +10,7 @@ from ape_ethereum.transactions import StaticFeeTransaction
 @pytest.fixture(scope="session")
 def transaction():
     txn = {
-        "chain_id": 11155111,
+        # "chain_id": 11155111,
         "nonce": 0,
         "value": 1,
         "data": '0x00',
@@ -44,5 +44,4 @@ def test_signing_message(kms_account, string_message):
 
 def test_signing_transaction(kms_account, transaction):
     val = kms_account.sign_transaction(transaction)
-    breakpoint()
     assert isinstance(val.signature, TransactionSignature)
