@@ -46,13 +46,13 @@ ape aws -h
 To create a new key:
 
 ```bash
-ape aws kms create 'NewKey' 'Description of new key'
+ape aws kms create 'KeyAlias' 'Description of new key'
 ```
 
 To delete this key:
 
 ```bash
-ape aws kms delete 'NewKey'
+ape aws kms delete 'KeyAlias'
 ```
 
 ### IPython
@@ -64,11 +64,9 @@ ape console
 ```
 
 ```python
-In [1]: from ape_aws.accounts import AwsAccountContainer, KmsAccount
-In [2]: from eth_account.messages import encode_defunct
-In [3]: aws = AwsAccountContainer(data_folder='./', account_type=KmsAccount)
-In [4]: list(aws.accounts)[0].sign_message(encode_defunct(text='12345'))
-Out[4]: <MessageSignature v=75, r=0x..., s=0x...>
+In [1]: kms_acct = accounts.load("KeyAlias")
+In [2]: kms_acct.sign_message("12345")
+Out[2]: <MessageSignature v=27, r=0x..., s=0x...>
 ```
 
 ## Development
