@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import ClassVar
 
-import boto3
+import boto3  # type: ignore[import]
 from pydantic import BaseModel, Field
 
 
