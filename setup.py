@@ -58,9 +58,7 @@ setup(
         "eth-ape>=0.7.0,<0.8",
         "ecdsa>=0.19.0,<1",
     ],  # NOTE: Add 3rd party libraries here
-    entry_points={
-        "ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]
-    },
+    entry_points={"ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]},
     python_requires=">=3.7,<4",
     extras_require=extras_require,
     py_modules=["ape_aws_kms"],
