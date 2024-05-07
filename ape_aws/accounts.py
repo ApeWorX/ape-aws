@@ -100,7 +100,8 @@ class KmsAccount(AccountAPI):
                 gas=txn.gas_limit,
                 to=txn.receiver,
                 value=txn.value,
-                data=txn.data
+                data=txn.data,
+                chainId=txn.chain_id
             )
         ).hash()
         msg_sig = self._sign_raw_hash(unsigned_txn)
