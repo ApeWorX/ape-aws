@@ -1,5 +1,4 @@
 import click
-from ape.cli import ape_cli_context
 
 from ape_aws.client import iam_client
 
@@ -10,12 +9,10 @@ def iam():
 
 
 @iam.command()
-@ape_cli_context()
-def list_admins(cli_ctx):
-    cli_ctx.logger.success(f"Administrators: {iam_client.list_admins()}")
+def list_admins():
+    click.echo(f"Administrators: {iam_client.list_admins()}")
 
 
 @iam.command()
-@ape_cli_context()
-def list_users(cli_ctx):
-    cli_ctx.logger.success(f"Users: {iam_client.list_users()}")
+def list_users():
+    click.echo(f"Users: {iam_client.list_users()}")
