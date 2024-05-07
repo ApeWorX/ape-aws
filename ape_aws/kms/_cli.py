@@ -54,6 +54,8 @@ def create_key(
     cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
 
 # TODO: Add `ape aws kms import`
+# TODO: Add `ape aws kms sign-message [message]`
+# TODO: Add `ape aws kms verify-message [message] [hex-signature]`
 
 @kms.command(name="delete")
 @ape_cli_context()
