@@ -45,17 +45,22 @@ class KmsAccount(AccountAPI):
     def address(self) -> AddressType:
         return to_checksum_address(keccak(self.public_key[-64:])[-20:].hex().lower())
 
-    def _sign_raw_hash(self, msghash: HexBytes) -> bytes:
+    def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
         return kms_client.sign(self.key_id, msghash)
 
     def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
         if len(msghash) != 32:
             return None
 
-        if signature := self._sign_raw_hash(msghash):
-            return MessageSignature(**_convert_der_to_rsv(signature, 75))
+        if not (signature := self._sign_raw_hash(msghash)):
+            return None
 
-        return None
+        msg_sig = MessageSignature(**_convert_der_to_rsv(signature, 27))
+        # TODO: Figure out how to properly compute v
+        if not self.check_signature(msghash, msg_sig):
+            msg_sig = MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
+
+        return msg_sig
 
     def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
         if isinstance(msg, SignableMessage):
@@ -67,12 +72,7 @@ class KmsAccount(AccountAPI):
                 message = encode_defunct(text=msg)
         if isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
-        msg_sig = self.sign_raw_msghash(_hash_eip191_message(message))
-        # TODO: Figure out how to properly compute v
-        if not self.check_signature(msg, msg_sig):
-            msg_sig = MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
-
-        return msg_sig
+        return self.sign_raw_msghash(_hash_eip191_message(message))
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         """
