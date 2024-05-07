@@ -43,5 +43,4 @@ def test_signing_message(kms_account, string_message):
 
 def test_signing_transaction(kms_account, transaction):
     val = kms_account.sign_transaction(transaction)
-    breakpoint()
     assert isinstance(val.signature, TransactionSignature)
