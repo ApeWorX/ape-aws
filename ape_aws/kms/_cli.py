@@ -16,24 +16,16 @@ def kms():
     "--admin",
     "administrators",
     multiple=True,
-    help="Apply key policy to a list of administrators if applicable, ex. -a A1, -a A2",
-    metavar="list[str]",
+    help="Apply key policy to a list of administrators if applicable, ex. -a ARN1, -a ARN2",
+    metavar="list[ARN]",
 )
 @click.option(
     "-u",
     "--user",
     "users",
     multiple=True,
-    help="Apply key policy to a list of users if applicable, ex. -u U1, -u U2",
-    metavar="list[str]",
-)
-@click.option(
-    "-t",
-    "--tag",
-    "tags",
-    multiple=True,
-    help="Apply tags to the newly created KMS key, ex. -t k1=v1 -t k2=v2",
-    metavar="list[dict]",
+    help="Apply key policy to a list of users if applicable, ex. -u ARN1, -u ARN2",
+    metavar="list[ARN]",
 )
 @click.argument("alias_name")
 @click.argument("description")
@@ -43,7 +35,6 @@ def create_key(
     description: str,
     administrators: list[str],
     users: list[str],
-    tags: list[dict],
 ):
     """
     Create an Ethereum Private Key in AWS KmsAccount
@@ -53,17 +44,11 @@ def create_key(
         alias_name str: The alias of the key you intend to create
         description str: The description of the key you intend to create.
     """
-    if tags:
-        tags_list = []
-        for k_v in tags:
-            k, v = k_v.split("=")
-            tags_list.append(dict(k=v))
     key_spec = CreateKey(
         alias=alias_name,
         Description=description,
         admins=administrators,
         users=users,
-        Tags=tags_list if tags else None,
     )
     key_id = kms_client.create_key(key_spec)
     cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
