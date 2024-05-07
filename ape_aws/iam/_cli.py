@@ -10,11 +10,11 @@ def iam():
 
 @iam.command()
 def list_admins():
-    if admins := '\n'.join(iam_client.list_admins()):
+    if admins := "\n".join(iam_client.list_admins()):
         click.echo(f"Administrators:\n{admins}")
 
 
 @iam.command()
 def list_users():
-    if users := '\n'.join(iam_client.list_users()):
+    if users := "\n".join(iam_client.list_users()):
         click.echo(f"Users:\n{users}")
