@@ -1,7 +1,7 @@
-from typing import ClassVar
-import boto3
-
 from datetime import datetime
+from typing import ClassVar
+
+import boto3
 from pydantic import BaseModel, Field
 
 
@@ -18,16 +18,18 @@ class KeyBaseModel(BaseModel):
 
 
 class CreateKeyModel(KeyBaseModel):
-    description: str = Field(alias='Description')
-    policy: str | None = Field(default=None, alias='Policy')
-    key_usage: str = Field(default='SIGN_VERIFY', alias='KeyUsage')
-    key_spec: str = Field(default='ECC_SECG_P256K1', alias='KeySpec')
+    description: str = Field(alias="Description")
+    policy: str | None = Field(default=None, alias="Policy")
+    key_usage: str = Field(default="SIGN_VERIFY", alias="KeyUsage")
+    key_spec: str = Field(default="ECC_SECG_P256K1", alias="KeySpec")
     admins: list[str] = []
     users: list[str] = []
-    tags: list[dict[str, str]] | None = Field(default=None, alias='Tags')
+    tags: list[dict[str, str]] | None = Field(default=None, alias="Tags")
     multi_region: bool | None = Field(default=None, alias="MultiRegion")
-    origin: str = Field(alias='Origin')
-    ADMIN_KEY_POLICY: ClassVar[str] = """{
+    origin: str = Field(alias="Origin")
+    ADMIN_KEY_POLICY: ClassVar[
+        str
+    ] = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
         "Statement": [{
@@ -38,7 +40,9 @@ class CreateKeyModel(KeyBaseModel):
             "Resource": "*"
         }]
     }"""
-    USER_KEY_POLICY: ClassVar[str] = """{
+    USER_KEY_POLICY: ClassVar[
+        str
+    ] = """{
         "Version": "2012-10-17",
         "Id": "key-default-1",
         "Statement": [{
@@ -60,11 +64,11 @@ class CreateKeyModel(KeyBaseModel):
 
 
 class CreateKey(CreateKeyModel):
-    origin: str = Field(default='AWS_KMS', alias='Origin')
+    origin: str = Field(default="AWS_KMS", alias="Origin")
 
 
 class ImportKey(CreateKeyModel):
-    origin: str = Field(default='EXTERNAL', alias='Origin')
+    origin: str = Field(default="EXTERNAL", alias="Origin")
 
 
 class DeleteKey(KeyBaseModel):
@@ -73,18 +77,17 @@ class DeleteKey(KeyBaseModel):
 
 
 class KmsClient:
-
     def __init__(self):
-        self.client = boto3.client('kms')
+        self.client = boto3.client("kms")
 
     @property
     def raw_aliases(self) -> list[AliasResponse]:
-        paginator = self.client.get_paginator('list_aliases')
+        paginator = self.client.get_paginator("list_aliases")
         pages = paginator.paginate()
         return [
             AliasResponse(**page)
             for alias_data in pages
-            for page in alias_data['Aliases']
+            for page in alias_data["Aliases"]
             if "alias/aws" not in page["AliasName"]
         ]
 
@@ -95,16 +98,16 @@ class KmsClient:
         response = self.client.sign(
             KeyId=key_id,
             Message=msghash,
-            MessageType='DIGEST',
-            SigningAlgorithm='ECDSA_SHA_256',
+            MessageType="DIGEST",
+            SigningAlgorithm="ECDSA_SHA_256",
         )
-        return response.get('Signature')
+        return response.get("Signature")
 
     def create_key(self, key_spec: CreateKey):
         response = self.client.create_key(**key_spec.to_aws_dict())
-        key_id = response['KeyMetadata']['KeyId']
+        key_id = response["KeyMetadata"]["KeyId"]
         self.client.create_alias(
-            AliasName=f'alias/{key_spec.alias}',
+            AliasName=f"alias/{key_spec.alias}",
             TargetKeyId=key_id,
         )
         if key_spec.tags:
@@ -116,42 +119,39 @@ class KmsClient:
             for arn in key_spec.admins:
                 self.client.put_key_policy(
                     KeyId=key_id,
-                    PolicyName='default',
-                    Policy=key_spec.ADMIN_KEY_POLICY.format(arn=arn)
+                    PolicyName="default",
+                    Policy=key_spec.ADMIN_KEY_POLICY.format(arn=arn),
                 )
         if key_spec.users:
             for arn in key_spec.users:
                 kms_client.client.put_key_policy(
                     KeyId=key_id,
-                    PolicyName='default',
-                    Policy=key_spec.USER_KEY_POLICY.format(arn=arn)
+                    PolicyName="default",
+                    Policy=key_spec.USER_KEY_POLICY.format(arn=arn),
                 )
         return key_id
 
     def delete_key(self, key_spec: DeleteKey):
         self.client.delete_alias(AliasName=key_spec.alias)
-        self.client.schedule_key_deletion(
-            KeyId=key_spec.key_id, PendingWindowInDays=key_spec.days
-        )
+        self.client.schedule_key_deletion(KeyId=key_spec.key_id, PendingWindowInDays=key_spec.days)
         return key_spec.alias
 
 
 class IamClient:
-
     def __init__(self):
-        self.client = boto3.client('iam')
+        self.client = boto3.client("iam")
 
     def list_users(self):
         result = self.client.list_users()
-        return result.get('Users')
+        return result.get("Users")
 
     def list_admins(self):
         admins = []
         for user in self.list_users():
-            user_name = user['UserName']
+            user_name = user["UserName"]
             user_policies = self.client.list_attached_user_policies(UserName=user_name)
-            for policy in user_policies['AttachedPolicies']:
-                if policy['PolicyName'] == 'AdministratorAccess':
+            for policy in user_policies["AttachedPolicies"]:
+                if policy["PolicyName"] == "AdministratorAccess":
                     admins.append(user_name)
         return admins
 
