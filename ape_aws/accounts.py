@@ -86,16 +86,7 @@ class KmsAccount(AccountAPI):
             TransactionAPI | None
         """
         unsigned_txn = serializable_unsigned_transaction_from_dict(
-            dict(
-                nonce=txn.nonce,
-                gasPrice=txn.gas_price,
-                gas=txn.gas_limit,
-                to=txn.receiver,
-                value=txn.value,
-                data=txn.data,
-                chainId=txn.chain_id,
-            )
-        ).hash()
+            txn.model_dump()).hash()
         if not (msg_sig := self._sign_raw_hash(unsigned_txn)):
             return None
         txn.signature = TransactionSignature(
