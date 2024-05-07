@@ -1,10 +1,9 @@
-from ape.types import MessageSignature, TransactionSignature
-
 import pytest
+from ape.types import MessageSignature, TransactionSignature
+from ape_ethereum.transactions import StaticFeeTransaction
 from eth_account.messages import encode_defunct
 
 from ape_aws.accounts import AwsAccountContainer, KmsAccount
-from ape_ethereum.transactions import StaticFeeTransaction
 
 
 @pytest.fixture(scope="session")
@@ -13,7 +12,7 @@ def transaction():
         "chain_id": 11155111,
         "nonce": 0,
         "value": 1,
-        "data": '0x00',
+        "data": "0x00",
         "receiver": "0xa5D3241A1591061F2a4bB69CA0215F66520E67cf",
         "type": 0,
         "gas_limit": 1000000,
@@ -24,12 +23,12 @@ def transaction():
 
 @pytest.fixture(scope="session")
 def string_message():
-    return encode_defunct(text='12345')
+    return encode_defunct(text="12345")
 
 
 @pytest.fixture(scope="session")
 def aws_account_container():
-    return AwsAccountContainer(data_folder='./', account_type=KmsAccount)
+    return AwsAccountContainer(data_folder="./", account_type=KmsAccount)
 
 
 @pytest.fixture(scope="session")

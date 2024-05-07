@@ -1,20 +1,18 @@
 from functools import cached_property
 from typing import Any, Iterator, Optional
 
-from eth_account.messages import _hash_eip191_message, encode_defunct
+from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
+from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
+from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
 
-from ape.api.accounts import AccountContainerAPI, AccountAPI, TransactionAPI
-from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
-
-from .utils import _convert_der_to_rsv
 from .client import kms_client
+from .utils import _convert_der_to_rsv
 
 
 class AwsAccountContainer(AccountContainerAPI):
-
     @property
     def aliases(self) -> Iterator[str]:
         return map(lambda x: x.alias, kms_client.raw_aliases)
@@ -30,7 +28,7 @@ class AwsAccountContainer(AccountContainerAPI):
                 key_id=x.key_id,
                 key_arn=x.arn,
             ),
-            kms_client.raw_aliases
+            kms_client.raw_aliases,
         )
 
 
@@ -45,11 +43,9 @@ class KmsAccount(AccountAPI):
 
     @cached_property
     def address(self) -> AddressType:
-        return to_checksum_address(
-            keccak(self.public_key[-64:])[-20:].hex().lower()
-        )
+        return to_checksum_address(keccak(self.public_key[-64:])[-20:].hex().lower())
 
-    def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
+    def _sign_raw_hash(self, msghash: HexBytes) -> bytes:
         return kms_client.sign(self.key_id, msghash)
 
     def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
@@ -61,13 +57,11 @@ class KmsAccount(AccountAPI):
 
         return None
 
-    def sign_message(
-        self, msg: Any, **signer_options
-    ) -> Optional[MessageSignature]:
+    def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
         if isinstance(msg, SignableMessage):
             message = msg
         if isinstance(msg, str):
-            if msg.startswith('0x'):
+            if msg.startswith("0x"):
                 message = encode_defunct(hexstr=msg)
             else:
                 message = encode_defunct(text=msg)
@@ -80,9 +74,7 @@ class KmsAccount(AccountAPI):
 
         return msg_sig
 
-    def sign_transaction(
-        self, txn: TransactionAPI, **signer_options
-    ) -> Optional[TransactionAPI]:
+    def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         """
         Sign an EIP-155 transaction.
         CHECK TYPE 0 transactions.
@@ -101,7 +93,7 @@ class KmsAccount(AccountAPI):
                 to=txn.receiver,
                 value=txn.value,
                 data=txn.data,
-                chainId=txn.chain_id
+                chainId=txn.chain_id,
             )
         ).hash()
         msg_sig = self._sign_raw_hash(unsigned_txn)

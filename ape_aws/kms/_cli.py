@@ -1,7 +1,7 @@
 import click
-
-from ape_aws.client import kms_client, CreateKey, DeleteKey
 from ape.cli import ape_cli_context
+
+from ape_aws.client import CreateKey, DeleteKey, kms_client
 
 
 @click.group("kms")
@@ -17,7 +17,7 @@ def kms():
     "administrators",
     multiple=True,
     help="Apply key policy to a list of administrators if applicable, ex. -a A1, -a A2",
-    metavar='list[str]',
+    metavar="list[str]",
 )
 @click.option(
     "-u",
@@ -25,7 +25,7 @@ def kms():
     "users",
     multiple=True,
     help="Apply key policy to a list of users if applicable, ex. -u U1, -u U2",
-    metavar='list[str]',
+    metavar="list[str]",
 )
 @click.option(
     "-t",
@@ -33,7 +33,7 @@ def kms():
     "tags",
     multiple=True,
     help="Apply tags to the newly created KMS key, ex. -t k1=v1 -t k2=v2",
-    metavar='list[dict]'
+    metavar="list[dict]",
 )
 @click.argument("alias_name")
 @click.argument("description")
@@ -56,7 +56,7 @@ def create_key(
     if tags:
         tags_list = []
         for k_v in tags:
-            k, v = k_v.split('=')
+            k, v = k_v.split("=")
             tags_list.append(dict(k=v))
     key_spec = CreateKey(
         alias=alias_name,
