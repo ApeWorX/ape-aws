@@ -55,7 +55,7 @@ setup(
     install_requires=[
         "importlib-metadata ; python_version<'3.8'",
         "boto3>=1.34.79,<2",
-        "eth-ape>=0.7.0,<0.8",
+        "eth-ape>=0.7.14,<0.8",
         "ecdsa>=0.19.0,<1",
     ],  # NOTE: Add 3rd party libraries here
     entry_points={"ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]},
