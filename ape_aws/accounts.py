@@ -85,8 +85,7 @@ class KmsAccount(AccountAPI):
         Returns:
             TransactionAPI | None
         """
-        unsigned_txn = serializable_unsigned_transaction_from_dict(
-            txn.model_dump()).hash()
+        unsigned_txn = serializable_unsigned_transaction_from_dict(txn.model_dump()).hash()
         if not (msg_sig := self._sign_raw_hash(unsigned_txn)):
             return None
         txn.signature = TransactionSignature(
