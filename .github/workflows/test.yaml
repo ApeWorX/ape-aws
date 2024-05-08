@@ -64,17 +64,12 @@ jobs:
         - name: Install Dependencies
           run: pip install .[test]
 
-        - name: Install AWS CLI
-          uses: unfor19/install-aws-cli-action@v1
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v4
           with:
-            version: 2
-        - run: aws --version
-          shell: bash
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
-            AWS_DEFAULT_OUTPUT: json
+            aws-region: us-east-1
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
         - name: Run Tests
           run: pytest -m "not fuzzing" -n 0 -s --cov
