@@ -73,6 +73,8 @@ jobs:
           env:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: ${{ variables.AWS_REGION }}
+            AWS_DEFAULT_OUTPUT: json
 
         - name: Run Tests
           run: pytest -m "not fuzzing" -n 0 -s --cov
