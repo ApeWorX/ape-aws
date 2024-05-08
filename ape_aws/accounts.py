@@ -46,7 +46,7 @@ class KmsAccount(AccountAPI):
     def address(self) -> AddressType:
         return to_checksum_address(keccak(self.public_key[-64:])[-20:].hex().lower())
 
-    def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
+    def _sign_raw_hash(self, msghash: HexBytes | Hash32) -> Optional[bytes]:
         return kms_client.sign(self.key_id, msghash)
 
     def sign_raw_msghash(self, msghash: HexBytes | Hash32) -> Optional[MessageSignature]:
