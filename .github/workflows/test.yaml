@@ -6,9 +6,6 @@ jobs:
     linting:
         runs-on: ubuntu-latest
 
-        permissions:
-          contents: write
-
         steps:
         - uses: actions/checkout@v4
 
@@ -32,9 +29,6 @@ jobs:
     type-check:
         runs-on: ubuntu-latest
 
-        permissions:
-          contents: write
-
         steps:
         - uses: actions/checkout@v4
 
@@ -51,9 +45,6 @@ jobs:
 
     functional:
         runs-on: ${{ matrix.os }}
-
-        permissions:
-          contents: write
 
         strategy:
             matrix:
