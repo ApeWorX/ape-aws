@@ -3,7 +3,6 @@
 Ape plugin to make transactions through AWS KMS
 
 ## Dependencies
-
 - [python3](https://www.python.org/downloads) version 3.10 or greater, python3-dev
 
 ## Installation
