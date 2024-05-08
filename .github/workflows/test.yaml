@@ -64,6 +64,13 @@ jobs:
         - name: Install Dependencies
           run: pip install .[test]
 
+        - name: Install AWS CLI
+          uses: unfor19/install-aws-cli-action@v1
+          with:
+            version: 2
+        - run: aws --version
+          shell: bash
+
         - name: Run Tests
           run: pytest -m "not fuzzing" -n 0 -s --cov
 
