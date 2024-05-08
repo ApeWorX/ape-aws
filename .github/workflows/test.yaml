@@ -70,6 +70,9 @@ jobs:
             version: 2
         - run: aws --version
           shell: bash
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
         - name: Run Tests
           run: pytest -m "not fuzzing" -n 0 -s --cov
