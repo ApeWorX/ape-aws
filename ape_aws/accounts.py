@@ -7,6 +7,7 @@ from eth_account._utils.legacy_transactions import serializable_unsigned_transac
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
 from eth_utils import keccak, to_checksum_address
+from eth_typing import Hash32
 
 from .client import kms_client
 from .utils import _convert_der_to_rsv
@@ -48,7 +49,7 @@ class KmsAccount(AccountAPI):
     def _sign_raw_hash(self, msghash: HexBytes) -> Optional[bytes]:
         return kms_client.sign(self.key_id, msghash)
 
-    def sign_raw_msghash(self, msghash: HexBytes) -> Optional[MessageSignature]:
+    def sign_raw_msghash(self, msghash: HexBytes | Hash32) -> Optional[MessageSignature]:
         if len(msghash) != 32:
             return None
 
