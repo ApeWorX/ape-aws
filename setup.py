@@ -4,16 +4,16 @@ from setuptools import find_packages, setup  # type: ignore
 
 extras_require = {
     "test": [  # `test` GitHub Action jobs uses this
-        "pytest>=6.0,<7.0",  # Core testing package
+        "pytest>=6.0,<8.0",  # Core testing package
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
     ],
     "lint": [
-        "black>=21.10b0,<22.0",  # auto-formatter and linter
-        "mypy>=0.910,<1.0",  # Static type analyzer
-        "flake8>=3.8.3,<4.0",  # Style linter
-        "isort>=5.9.3,<6.0",  # Import sorting linter
+        "black>=24.2.0,<25",  # auto-formatter and linter
+        "mypy>=1.8.0,<2",  # Static type analyzer
+        "flake8>=7.0.0,<8",  # Style linter
+        "isort>=5.10.1,<6",  # Import sorting linter
     ],
     "release": [  # `release` GitHub Action job uses this
         "setuptools",  # Installation tool
@@ -54,8 +54,11 @@ setup(
     include_package_data=True,
     install_requires=[
         "importlib-metadata ; python_version<'3.8'",
-        "eth-ape>=0.1.0b3"
+        "boto3>=1.34.79,<2",
+        "eth-ape>=0.7.14,<0.8",
+        "ecdsa>=0.19.0,<1",
     ],  # NOTE: Add 3rd party libraries here
+    entry_points={"ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]},
     python_requires=">=3.7,<4",
     extras_require=extras_require,
     py_modules=["ape_aws_kms"],

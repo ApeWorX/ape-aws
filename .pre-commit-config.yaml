@@ -1,36 +1,44 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.5.0
     hooks:
     -   id: check-yaml
 
--   repo: https://github.com/asottile/seed-isort-config
-    rev: v2.2.0
-    hooks:
-    -   id: seed-isort-config
-
 -   repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.9.3
+    rev: v5.10.1
     hooks:
       - id: isort
 
 -   repo: https://github.com/psf/black
-    rev: 21.10b0
+    rev: 24.2.0
     hooks:
       - id: black
         name: black
 
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+-   repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
     hooks:
     -   id: flake8
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.910-1
+    rev: v1.8.0
     hooks:
     -   id: mypy
-        additional_dependencies: [types-PyYAML, types-requests]
+        additional_dependencies: [
+                types-PyYAML,
+                types-requests,
+                types-setuptools,
+                pydantic,
+                pandas-stubs,
+                types-SQLAlchemy
+        ]
+
+-   repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+    -   id: mdformat
+        additional_dependencies: [mdformat-gfm, mdformat-frontmatter, mdformat-pyproject]
 
 
 default_language_version:
-    python: python3.8
+    python: python3.10
