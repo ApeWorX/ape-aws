@@ -76,15 +76,11 @@ Comments, questions, criticisms and pull requests are welcomed.
 To begin, create a virtual environment set up and activate the virtual environment before doing anything for the setup of AWS
 
 1. You must have an AWS account
-1. Must be an AWS Identity and Access Management (IAM) user with administrator access
-1. Must have configured AWS credentials
-1. Must have [Docker](https://docs.docker.com/get-docker/),
-   [Node.js](https://nodejs.org/en/download/),
+2. Must be an AWS Identity and Access Management (IAM) user with administrator access
+3. Must have configured AWS credentials
+4. Must have [Docker](https://docs.docker.com/get-docker/),
    [Python3](https://www.python.org/downloads/) and
    [pip](https://pip.pypa.io/en/stable/installation/) installed on your workstation
-1. You must have the [AWS CDK Toolkit](https://docs.aws.amazon.com/cdk/v2/guide/cli.html)
-1. You should setup the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install-linux.html)
-   1. This is the best option for downloading docker and the SAM CLI
 
 ## AWS KMS Key Import Steps
 
