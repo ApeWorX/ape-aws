@@ -42,7 +42,7 @@ with open("./README.md") as readme:
 
 
 setup(
-    name="Ape AWS KMS",
+    name="ape-aws",
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     description="""Ape AWS KMS: Ape plugin to make transactions through AWS KMS""",
