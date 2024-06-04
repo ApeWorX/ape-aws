@@ -4,7 +4,7 @@ from setuptools import find_packages, setup  # type: ignore
 
 extras_require = {
     "test": [  # `test` GitHub Action jobs uses this
-        "pytest>=6.0,<8.0",  # Core testing package
+        "pytest>=8.0,<9.0",  # Core testing package
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
@@ -55,7 +55,7 @@ setup(
     install_requires=[
         "importlib-metadata ; python_version<'3.8'",
         "boto3>=1.34.79,<2",
-        "eth-ape>=0.7.14,<0.8",
+        "eth-ape>=0.8.2,<0.9",
         "ecdsa>=0.19.0,<1",
     ],  # NOTE: Add 3rd party libraries here
     entry_points={"ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]},
@@ -75,8 +75,8 @@ setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
 )

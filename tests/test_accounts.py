@@ -28,7 +28,7 @@ def string_message():
 
 @pytest.fixture(scope="session")
 def aws_account_container():
-    return AwsAccountContainer(data_folder="./", account_type=KmsAccount)
+    return AwsAccountContainer(name="ape-aws", account_type=KmsAccount)
 
 
 @pytest.fixture(scope="session")
