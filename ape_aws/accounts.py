@@ -39,6 +39,10 @@ class KmsAccount(AccountAPI):
     key_arn: str
 
     @property
+    def alias(self) -> str:
+        return self.key_alias.replace("alias/", "")
+
+    @property
     def public_key(self):
         return kms_client.get_public_key(self.key_id)
 

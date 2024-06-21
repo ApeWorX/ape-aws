@@ -88,7 +88,7 @@ class KmsClient:
             AliasResponse(**page)
             for alias_data in pages
             for page in alias_data["Aliases"]
-            if "alias/aws" not in page["AliasName"]
+            if "alias/aws/" not in page["AliasName"]
         ]
 
     def get_public_key(self, key_id: str):
