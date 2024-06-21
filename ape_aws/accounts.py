@@ -40,7 +40,7 @@ class KmsAccount(AccountAPI):
 
     @property
     def alias(self) -> str:
-        return self.key_alias.strip("alias/")
+        return self.key_alias.split("/")[1]
 
     @property
     def public_key(self):
