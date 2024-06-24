@@ -1,8 +1,11 @@
+from cryptography.hazmat.primitives.asymmetric import ec, padding
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.backends import default_backend
 from datetime import datetime
 from typing import ClassVar
 
 import boto3  # type: ignore[import]
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class AliasResponse(BaseModel):
@@ -15,6 +18,7 @@ class AliasResponse(BaseModel):
 
 class KeyBaseModel(BaseModel):
     alias: str
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CreateKeyModel(KeyBaseModel):
@@ -67,8 +71,43 @@ class CreateKey(CreateKeyModel):
     origin: str = Field(default="AWS_KMS", alias="Origin")
 
 
-class ImportKey(CreateKeyModel):
+class ImportKeyRequest(CreateKeyModel):
     origin: str = Field(default="EXTERNAL", alias="Origin")
+
+
+class ImportKey(ImportKeyRequest):
+    key_id: str = Field(default=None, alias="KeyId")
+    public_key: bytes = Field(default=None, alias="PublicKey")
+    private_key: bytes = Field(
+        default=ec.generate_private_key(
+            ec.SeCP256K1(),
+            default_backend()
+        ).private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        ),
+        alias="PrivateKey",
+    )
+    import_token: bytes = Field(default=None, alias="ImportToken")
+
+    @property
+    def encrypted_key(self):
+        if not self.public_key:
+            raise ValueError("Public key not found")
+
+        serialized_public_key = serialization.load_der_public_key(
+            self.public_key,
+            backend=default_backend(),
+        )
+        return serialized_public_key.encrypt(
+            self.private_key,
+            padding.OAEP(
+                mgf=padding.MGF1(hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None,
+            )
+        )
 
 
 class DeleteKey(KeyBaseModel):
@@ -103,8 +142,9 @@ class KmsClient:
         )
         return response.get("Signature")
 
-    def create_key(self, key_spec: CreateKey):
+    def create_key(self, key_spec: CreateKey | ImportKey):
         response = self.client.create_key(**key_spec.to_aws_dict())
+
         key_id = response["KeyMetadata"]["KeyId"]
         self.client.create_alias(
             AliasName=f"alias/{key_spec.alias}",
@@ -130,6 +170,22 @@ class KmsClient:
                     Policy=key_spec.USER_KEY_POLICY.format(arn=arn),
                 )
         return key_id
+
+    def import_key(self, key_spec: ImportKey):
+        breakpoint()
+        return self.client.import_key_material(
+            KeyId=key_spec.key_id,
+            ImportToken=key_spec.import_token,
+            EncryptedKeyMaterial=key_spec.encrypted_key,
+            ExpirationModel="KEY_MATERIAL_DOES_NOT_EXPIRE",
+        )
+
+    def get_parameters(self, key_id: str):
+        return self.client.get_parameters_for_import(
+            KeyId=key_id,
+            WrappingAlgorithm="RSAES_OAEP_SHA_256",
+            WrappingKeySpec="RSA_2048",
+        )
 
     def delete_key(self, key_spec: DeleteKey):
         self.client.delete_alias(AliasName=key_spec.alias)

@@ -1,7 +1,14 @@
+import base64
 import click
-from ape.cli import ape_cli_context
 
-from ape_aws.client import CreateKey, DeleteKey, kms_client
+from ape.cli import ape_cli_context
+from ape_aws.client import (
+    CreateKey,
+    DeleteKey,
+    ImportKeyRequest,
+    ImportKey,
+    kms_client,
+)
 
 
 @click.group("kms")
@@ -54,7 +61,56 @@ def create_key(
     cli_ctx.logger.success(f"Key created successfully with ID: {key_id}")
 
 
-# TODO: Add `ape aws kms import`
+@kms.command(name="import")
+@ape_cli_context()
+@click.option(
+    "-a",
+    "--admin",
+    "administrators",
+    multiple=True,
+    help="Apply key policy to a list of administrators if applicable, ex. -a ARN1, -a ARN2",
+    metavar="list[ARN]",
+)
+@click.option(
+    "-u",
+    "--user",
+    "users",
+    multiple=True,
+    help="Apply key policy to a list of users if applicable, ex. -u ARN1, -u ARN2",
+    metavar="list[ARN]",
+)
+@click.argument("alias_name")
+@click.argument("description")
+@click.argument("private_key")
+def import_key(
+    cli_ctx,
+    alias_name: str,
+    description: str,
+    private_key: bytes,
+    administrators: list[str],
+    users: list[str],
+):
+    key_spec = ImportKeyRequest(
+        alias=alias_name,
+        description=description,
+        admins=administrators,
+        users=users,
+    )
+    key_id = kms_client.create_key(key_spec)
+    create_key_response = kms_client.get_parameters(key_id)
+    public_key = base64.b64encode(create_key_response["PublicKey"])
+    import_token = base64.b64encode(create_key_response["ImportToken"])
+    import_key_spec = ImportKey(
+        **key_spec.model_dump(),
+        key_id=key_id,
+        public_key=public_key,
+        private_key=private_key,
+        import_token=import_token,
+    )
+    key_id = kms_client.import_key(import_key_spec)
+    cli_ctx.logger.success(f"Key imported successfully with ID: {key_id}")
+
+
 # TODO: Add `ape aws kms sign-message [message]`
 # TODO: Add `ape aws kms verify-message [message] [hex-signature]`
 
