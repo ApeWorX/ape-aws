@@ -1,6 +1,8 @@
 from cryptography.hazmat.primitives.asymmetric import ec, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.backends import default_backend
+from eth_account import Account
+
 from datetime import datetime
 from typing import ClassVar
 
@@ -87,24 +89,52 @@ class ImportKey(ImportKeyRequest):
             return ec.generate_private_key(
                 ec.SECP256K1(),
                 default_backend()
-            ).private_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),
             )
+        if value.startswith('0x'):
+            return value[2:]
         return value
 
     @property
-    def encrypted_key(self):
-        if not self.public_key:
-            raise ValueError("Public key not found")
+    def get_account(self):
+        return Account.privateKeyToAccount(self.private_key)
 
-        serialized_public_key = serialization.load_der_public_key(
+    @property
+    def private_key_bin(self):
+        """
+        Returns the private key in binary format
+        This is required for the `boto3.client.import_key_material` method
+        """
+        return self.private_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+
+    @property
+    def private_key_pem(self):
+        """
+        Returns the private key in PEM format for use in outside applications.
+        """
+        return self.private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+
+    @property
+    def public_key_der(self):
+        return serialization.load_der_public_key(
             self.public_key,
             backend=default_backend(),
         )
-        return serialized_public_key.encrypt(
-            self.private_key,
+
+    @property
+    def encrypted_private_key(self):
+        if not self.public_key:
+            raise ValueError("Public key not found")
+
+        return self.public_key_der.encrypt(
+            self.private_key_bin,
             padding.OAEP(
                 mgf=padding.MGF1(hashes.SHA256()),
                 algorithm=hashes.SHA256(),
@@ -178,7 +208,7 @@ class KmsClient:
         return self.client.import_key_material(
             KeyId=key_spec.key_id,
             ImportToken=key_spec.import_token,
-            EncryptedKeyMaterial=key_spec.encrypted_key,
+            EncryptedKeyMaterial=key_spec.encrypted_private_key,
             ExpirationModel="KEY_MATERIAL_DOES_NOT_EXPIRE",
         )
 

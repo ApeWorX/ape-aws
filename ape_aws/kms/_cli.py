@@ -1,4 +1,3 @@
-import base64
 import click
 
 from ape.cli import ape_cli_context
