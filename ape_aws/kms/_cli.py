@@ -64,6 +64,13 @@ def create_key(
 @kms.command(name="import")
 @ape_cli_context()
 @click.option(
+    "-p",
+    "--private-key",
+    "private_key",
+    multiple=False,
+    help="The private key to import",
+)
+@click.option(
     "-a",
     "--admin",
     "administrators",
@@ -81,7 +88,6 @@ def create_key(
 )
 @click.argument("alias_name")
 @click.argument("description")
-@click.argument("private_key")
 def import_key(
     cli_ctx,
     alias_name: str,
@@ -98,8 +104,8 @@ def import_key(
     )
     key_id = kms_client.create_key(key_spec)
     create_key_response = kms_client.get_parameters(key_id)
-    public_key = base64.b64encode(create_key_response["PublicKey"])
-    import_token = base64.b64encode(create_key_response["ImportToken"])
+    public_key = create_key_response["PublicKey"]
+    import_token = create_key_response["ImportToken"]
     import_key_spec = ImportKey(
         **key_spec.model_dump(),
         key_id=key_id,

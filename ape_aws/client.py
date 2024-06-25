@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import ClassVar
 
 import boto3  # type: ignore[import]
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
 class AliasResponse(BaseModel):
@@ -78,18 +78,21 @@ class ImportKeyRequest(CreateKeyModel):
 class ImportKey(ImportKeyRequest):
     key_id: str = Field(default=None, alias="KeyId")
     public_key: bytes = Field(default=None, alias="PublicKey")
-    private_key: bytes = Field(
-        default=ec.generate_private_key(
-            ec.SeCP256K1(),
-            default_backend()
-        ).private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
-        ),
-        alias="PrivateKey",
-    )
+    private_key: bytes | None = Field(default=None, alias="PrivateKey")
     import_token: bytes = Field(default=None, alias="ImportToken")
+
+    @field_validator("private_key")
+    def validate_private_key(cls, value):
+        if not isinstance(value, bytes):
+            return ec.generate_private_key(
+                ec.SECP256K1(),
+                default_backend()
+            ).private_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+        return value
 
     @property
     def encrypted_key(self):
@@ -172,7 +175,6 @@ class KmsClient:
         return key_id
 
     def import_key(self, key_spec: ImportKey):
-        breakpoint()
         return self.client.import_key_material(
             KeyId=key_spec.key_id,
             ImportToken=key_spec.import_token,
