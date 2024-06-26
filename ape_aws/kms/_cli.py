@@ -1,6 +1,7 @@
 import click
 
 from ape.cli import ape_cli_context
+from ape_aws.accounts import AwsAccountContainer, KmsAccount
 from ape_aws.client import (
     CreateKey,
     DeleteKey,
@@ -95,6 +96,14 @@ def import_key(
     administrators: list[str],
     users: list[str],
 ):
+    def ask_for_passphrase():
+        return click.prompt(
+            "Create Passphrase to encrypt account",
+            hide_input=True,
+            confirmation_prompt=True,
+        )
+
+    passphrase = ask_for_passphrase()
     key_spec = ImportKeyRequest(
         alias=alias_name,
         description=description,
@@ -112,8 +121,12 @@ def import_key(
         private_key=private_key,
         import_token=import_token,
     )
-    key_id = kms_client.import_key(import_key_spec)
+    response = kms_client.import_key(import_key_spec)
+    if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+        cli_ctx.abort("Key failed to import into KMS")
     cli_ctx.logger.success(f"Key imported successfully with ID: {key_id}")
+    aws_account_container = AwsAccountContainer(name="aws", account_type=KmsAccount)
+    aws_account_container.add_private_key(alias_name, passphrase, import_key_spec.private_key_hex)
 
 
 # TODO: Add `ape aws kms sign-message [message]`

@@ -1,13 +1,17 @@
+from ape.utils.basemodel import ManagerAccessMixin
+
 from cryptography.hazmat.primitives.asymmetric import ec, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.backends import default_backend
 from eth_account import Account
+from eth_utils import to_bytes
 
 from datetime import datetime
 from typing import ClassVar
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 import boto3  # type: ignore[import]
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+import json
 
 
 class AliasResponse(BaseModel):
@@ -91,12 +95,16 @@ class ImportKey(ImportKeyRequest):
                 default_backend()
             )
         if value.startswith('0x'):
-            return value[2:]
+            value = bytes.fromhex(value[2:])
         return value
 
     @property
     def get_account(self):
         return Account.privateKeyToAccount(self.private_key)
+
+    @property
+    def private_key_hex(self):
+        return self.private_key.private_numbers().private_value.to_bytes(32, "big").hex()
 
     @property
     def private_key_bin(self):
@@ -141,6 +149,14 @@ class ImportKey(ImportKeyRequest):
                 label=None,
             )
         )
+
+    def import_account_from_private_key(self, passphrase: str):
+        account = Account.from_key(to_bytes(hexstr=self.private_key_hex))
+        path = ManagerAccessMixin.account_manager.containers["accounts"].data_folder.joinpath(
+            f"{self.alias}.json"
+        )
+        path.write_text(json.dumps(Account.encrypt(account.key, passphrase)))
+        return KmsAccount()
 
 
 class DeleteKey(KeyBaseModel):
