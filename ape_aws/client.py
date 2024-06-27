@@ -84,18 +84,18 @@ class ImportKeyRequest(CreateKeyModel):
 class ImportKey(ImportKeyRequest):
     key_id: str = Field(default=None, alias="KeyId")
     public_key: bytes = Field(default=None, alias="PublicKey")
-    private_key: bytes | None = Field(default=None, alias="PrivateKey")
+    private_key: str | bytes | None = Field(default=None, alias="PrivateKey")
     import_token: bytes = Field(default=None, alias="ImportToken")
 
     @field_validator("private_key")
     def validate_private_key(cls, value):
-        if not isinstance(value, bytes):
+        if not value:
             return ec.generate_private_key(
                 ec.SECP256K1(),
                 default_backend()
             )
         if value.startswith('0x'):
-            value = bytes.fromhex(value[2:])
+            value = value[2:]
         return value
 
     @property
@@ -103,7 +103,25 @@ class ImportKey(ImportKeyRequest):
         return Account.privateKeyToAccount(self.private_key)
 
     @property
+    def ec_private_key(self):
+        loaded_key = self.private_key
+        if isinstance(loaded_key, bytes):
+            loaded_key = ec.derive_private_key(
+                int(self.private_key, 16), ec.SECP256K1()
+            )
+        elif isinstance(loaded_key, str):
+            loaded_key = bytes.fromhex(loaded_key[2:])
+            loaded_key = ec.derive_private_key(
+                int(self.private_key, 16), ec.SECP256K1()
+            )
+        return loaded_key
+
+    @property
     def private_key_hex(self):
+        if isinstance(self.private_key, str):
+            return self.private_key
+        elif isinstance(self.private_key, bytes):
+            return self.private_key.hex()
         return self.private_key.private_numbers().private_value.to_bytes(32, "big").hex()
 
     @property
@@ -112,7 +130,7 @@ class ImportKey(ImportKeyRequest):
         Returns the private key in binary format
         This is required for the `boto3.client.import_key_material` method
         """
-        return self.private_key.private_bytes(
+        return self.ec_private_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
@@ -123,7 +141,7 @@ class ImportKey(ImportKeyRequest):
         """
         Returns the private key in PEM format for use in outside applications.
         """
-        return self.private_key.private_bytes(
+        return self.ec_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption(),
@@ -149,14 +167,6 @@ class ImportKey(ImportKeyRequest):
                 label=None,
             )
         )
-
-    def import_account_from_private_key(self, passphrase: str):
-        account = Account.from_key(to_bytes(hexstr=self.private_key_hex))
-        path = ManagerAccessMixin.account_manager.containers["accounts"].data_folder.joinpath(
-            f"{self.alias}.json"
-        )
-        path.write_text(json.dumps(Account.encrypt(account.key, passphrase)))
-        return KmsAccount()
 
 
 class DeleteKey(KeyBaseModel):
