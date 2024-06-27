@@ -28,14 +28,19 @@ def kms():
     help="Apply key policy to a list of users if applicable, ex. -u ARN1, -u ARN2",
     metavar="list[ARN]",
 )
+@click.option(
+    "-d",
+    "--description",
+    "description",
+    help="The description of the key you intend to create.",
+)
 @click.argument("alias_name")
-@click.argument("description")
 def create_key(
     cli_ctx,
     alias_name: str,
-    description: str,
     administrators: list[str],
     users: list[str],
+    description: str,
 ):
     """
     Create an Ethereum Private Key in AWS KmsAccount

@@ -37,7 +37,7 @@ class AwsAccountContainer(AccountContainerAPI):
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
-        def _load_account(key_alias, key_id, key_arn) -> Iterator[AccountAPI]:
+        def _load_account(key_alias, key_id, key_arn) -> AccountAPI:
             filename = f"{key_alias}.json"
             keyfile = self.data_folder.joinpath(filename)
             if filename not in self._keyfiles:

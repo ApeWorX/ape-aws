@@ -189,7 +189,7 @@ class KmsClient:
         )
         return response.get("Signature")
 
-    def create_key(self, key_spec: CreateKey | ImportKey):
+    def create_key(self, key_spec: CreateKey | ImportKeyRequest):
         response = self.client.create_key(**key_spec.to_aws_dict())
 
         key_id = response["KeyMetadata"]["KeyId"]
