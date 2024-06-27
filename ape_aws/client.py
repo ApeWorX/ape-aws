@@ -28,7 +28,7 @@ class KeyBaseModel(BaseModel):
 
 
 class CreateKeyModel(KeyBaseModel):
-    description: str = Field(alias="Description")
+    description: str | None = Field(default=None, alias="Description")
     policy: str | None = Field(default=None, alias="Policy")
     key_usage: str = Field(default="SIGN_VERIFY", alias="KeyUsage")
     key_spec: str = Field(default="ECC_SECG_P256K1", alias="KeySpec")

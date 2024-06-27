@@ -86,15 +86,21 @@ def create_key(
     help="Apply key policy to a list of users if applicable, ex. -u ARN1, -u ARN2",
     metavar="list[ARN]",
 )
+@click.option(
+    "-d",
+    "--description",
+    "description",
+    help="The description of the key you intend to create.",
+    metavar="str",
+)
 @click.argument("alias_name")
-@click.argument("description")
 def import_key(
     cli_ctx,
     alias_name: str,
-    description: str,
     private_key: bytes,
     administrators: list[str],
     users: list[str],
+    description: str,
 ):
     def ask_for_passphrase():
         return click.prompt(
@@ -136,8 +142,9 @@ def import_key(
 @kms.command(name="delete")
 @ape_cli_context()
 @click.argument("alias_name")
+@click.option("-p", "--purge", is_flag=True, help="Purge the key from the system")
 @click.option("-d", "--days", default=30, help="Number of days until key is deactivated")
-def schedule_delete_key(cli_ctx, alias_name, days):
+def schedule_delete_key(cli_ctx, alias_name, purge, days):
     if "alias" not in alias_name:
         alias_name = f"alias/{alias_name}"
     kms_account = None
@@ -150,4 +157,7 @@ def schedule_delete_key(cli_ctx, alias_name, days):
 
     delete_key_spec = DeleteKey(alias=alias_name, key_id=kms_account.key_id, days=days)
     key_alias = kms_client.delete_key(delete_key_spec)
+    if purge:
+        aws_account_container = AwsAccountContainer(name="aws", account_type=KmsAccount)
+        aws_account_container.delete_account(key_alias)
     cli_ctx.logger.success(f"Key {key_alias} scheduled for deletion in {days} days")

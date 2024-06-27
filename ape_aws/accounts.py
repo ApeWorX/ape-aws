@@ -74,6 +74,16 @@ class AwsAccountContainer(AccountContainerAPI):
         print("Key cached successfully")
         return
 
+    def delete_account(self, alias):
+        alias = alias.replace("alias/", "")
+        keyfile = self.data_folder.joinpath(f"{alias}.json")
+        if keyfile.exists():
+            keyfile.unlink()
+            print(f"Key {alias} deleted successfully")
+        else:
+            print(f"Key {alias} not found")
+
+
 class KmsAccount(AccountAPI):
     key_alias: str
     key_id: str
