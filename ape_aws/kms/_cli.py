@@ -127,7 +127,6 @@ def import_key(
         private_key=private_key,
         import_token=import_token,
     )
-    breakpoint()
     response = kms_client.import_key(import_key_spec)
     if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
         cli_ctx.abort("Key failed to import into KMS")
