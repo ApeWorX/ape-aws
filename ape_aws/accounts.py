@@ -47,10 +47,9 @@ class AwsAccountContainer(AccountContainerAPI):
                     key_id=key_id,
                     key_arn=key_arn,
                 )
-                keyfile.write_text(
-                    self.loaded_accounts[keyfile.stem].dump_to_json()
-                )
+                keyfile.write_text(self.loaded_accounts[keyfile.stem].dump_to_json())
             return self.loaded_accounts[keyfile.stem]
+
         return map(
             lambda x: _load_account(
                 key_alias=x.alias.replace("alias/", ""),

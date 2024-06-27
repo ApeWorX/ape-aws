@@ -90,11 +90,8 @@ class ImportKey(ImportKeyRequest):
     @field_validator("private_key")
     def validate_private_key(cls, value):
         if not value:
-            return ec.generate_private_key(
-                ec.SECP256K1(),
-                default_backend()
-            )
-        if value.startswith('0x'):
+            return ec.generate_private_key(ec.SECP256K1(), default_backend())
+        if value.startswith("0x"):
             value = value[2:]
         return value
 
@@ -106,14 +103,10 @@ class ImportKey(ImportKeyRequest):
     def ec_private_key(self):
         loaded_key = self.private_key
         if isinstance(loaded_key, bytes):
-            loaded_key = ec.derive_private_key(
-                int(self.private_key, 16), ec.SECP256K1()
-            )
+            loaded_key = ec.derive_private_key(int(self.private_key, 16), ec.SECP256K1())
         elif isinstance(loaded_key, str):
             loaded_key = bytes.fromhex(loaded_key[2:])
-            loaded_key = ec.derive_private_key(
-                int(self.private_key, 16), ec.SECP256K1()
-            )
+            loaded_key = ec.derive_private_key(int(self.private_key, 16), ec.SECP256K1())
         return loaded_key
 
     @property
@@ -165,7 +158,7 @@ class ImportKey(ImportKeyRequest):
                 mgf=padding.MGF1(hashes.SHA256()),
                 algorithm=hashes.SHA256(),
                 label=None,
-            )
+            ),
         )
 
 
