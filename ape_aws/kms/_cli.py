@@ -111,7 +111,7 @@ def import_key(
     passphrase = ask_for_passphrase()
     key_spec = ImportKeyRequest(
         alias=alias_name,
-        description=description,
+        description=description,  # type: ignore
         admins=administrators,
         users=users,
     )
@@ -121,10 +121,10 @@ def import_key(
     import_token = create_key_response["ImportToken"]
     import_key_spec = ImportKey(
         **key_spec.model_dump(),
-        key_id=key_id,
-        public_key=public_key,
-        private_key=private_key,
-        import_token=import_token,
+        key_id=key_id,  # type: ignore
+        public_key=public_key,  # type: ignore
+        private_key=private_key,  # type: ignore
+        import_token=import_token,  # type: ignore
     )
     response = kms_client.import_key(import_key_spec)
     if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
