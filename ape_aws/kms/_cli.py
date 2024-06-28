@@ -97,6 +97,18 @@ def create_key(
     metavar="str",
 )
 @click.option(
+    "--from-file",
+    "import_from_file",
+    help="Import a key from a file",
+    is_flag=True,
+)
+@click.option(
+    "--file-path",
+    "file_path",
+    help="The path to the file containing the private key",
+    metavar="str | Path",
+)
+@click.option(
     "--use-mnemonic",
     "import_from_mnemonic",
     help="Import a key from a mnemonic phrase",
@@ -112,15 +124,18 @@ def create_key(
 def import_key(
     cli_ctx,
     alias_name: str,
-    private_key: bytes | str | Path,
+    private_key: bytes | str,
     administrators: list[str],
     users: list[str],
     description: str,
+    import_from_file: bool,
+    file_path: str | Path,
     import_from_mnemonic: bool,
     hd_path: str,
 ):
-    if private_key:
-        path = Path(private_key)
+    if import_from_file:
+        if isinstance(file_path, str):
+            path = Path(private_key)
         if path.exists() and path.is_file():
             cli_ctx.logger.info(f"Reading private key from {path}")
             private_key = path.read_text().strip()

@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import Path
 from typing import ClassVar
 
 import boto3  # type: ignore[import]

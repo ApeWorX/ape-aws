@@ -1,5 +1,4 @@
 from functools import cached_property
-from json import dumps
 from typing import Any, Iterator, Optional
 
 from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
@@ -107,4 +106,3 @@ class KmsAccount(AccountAPI):
             )
 
         return txn
-
