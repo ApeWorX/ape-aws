@@ -1,9 +1,11 @@
 import click
 from pathlib import Path
 
+from eth_account import Account as EthAccount
+from eth_account.hdaccount import ETHEREUM_DEFAULT_PATH
+
 from ape.cli import ape_cli_context
 
-from ape_aws.accounts import AwsAccountContainer, KmsAccount
 from ape_aws.client import CreateKey, DeleteKey, ImportKey, ImportKeyRequest, kms_client
 
 
@@ -65,6 +67,13 @@ def create_key(
 @kms.command(name="import")
 @ape_cli_context()
 @click.option(
+    "-p",
+    "--private-key",
+    "private_key",
+    help="The private key you intend to import",
+    metavar="str",
+)
+@click.option(
     "-a",
     "--admin",
     "administrators",
@@ -87,8 +96,19 @@ def create_key(
     help="The description of the key you intend to create.",
     metavar="str",
 )
+@click.option(
+    "--use-mnemonic",
+    "import_from_mnemonic",
+    help="Import a key from a mnemonic phrase",
+    is_flag=True,
+)
+@click.option(
+    "--hd-path",
+    "hd_path",
+    help="The hierarchical deterministic path to derive the key from",
+    metavar="str",
+)
 @click.argument("alias_name")
-@click.argument("private_key")
 def import_key(
     cli_ctx,
     alias_name: str,
@@ -96,11 +116,22 @@ def import_key(
     administrators: list[str],
     users: list[str],
     description: str,
+    import_from_mnemonic: bool,
+    hd_path: str,
 ):
-    path = Path(private_key)
-    if path.exists() and path.is_file():
-        cli_ctx.logger.info(f"Reading private key from {path}")
-        private_key = path.read_text().strip()
+    if private_key:
+        path = Path(private_key)
+        if path.exists() and path.is_file():
+            cli_ctx.logger.info(f"Reading private key from {path}")
+            private_key = path.read_text().strip()
+
+    if import_from_mnemonic:
+        if not hd_path:
+            hd_path = ETHEREUM_DEFAULT_PATH
+        mnemonic = click.prompt("Enter your mnemonic phrase", hide_input=True)
+        EthAccount.enable_unaudited_hdwallet_features()
+        account = EthAccount.from_mnemonic(mnemonic, account_path=hd_path)
+        private_key = account.key.hex()
 
     key_spec = ImportKeyRequest(
         alias=alias_name,
