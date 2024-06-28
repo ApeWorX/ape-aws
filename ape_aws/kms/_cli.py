@@ -69,9 +69,10 @@ def create_key(
 @click.option(
     "-p",
     "--private-key",
-    "private_key",
+    "private_key_path",
+    type=click.Path(),
     help="The private key you intend to import",
-    metavar="str",
+    metavar="Path",
 )
 @click.option(
     "-a",
@@ -97,18 +98,6 @@ def create_key(
     metavar="str",
 )
 @click.option(
-    "--from-file",
-    "import_from_file",
-    help="Import a key from a file",
-    is_flag=True,
-)
-@click.option(
-    "--file-path",
-    "file_path",
-    help="The path to the file containing the private key",
-    metavar="str | Path",
-)
-@click.option(
     "--use-mnemonic",
     "import_from_mnemonic",
     help="Import a key from a mnemonic phrase",
@@ -124,29 +113,30 @@ def create_key(
 def import_key(
     cli_ctx,
     alias_name: str,
-    private_key: bytes | str,
+    private_key_path: Path,
     administrators: list[str],
     users: list[str],
     description: str,
-    import_from_file: bool,
-    file_path: str | Path,
     import_from_mnemonic: bool,
     hd_path: str,
 ):
-    if import_from_file:
-        if isinstance(file_path, str):
-            path = Path(private_key)
-        if path.exists() and path.is_file():
-            cli_ctx.logger.info(f"Reading private key from {path}")
-            private_key = path.read_text().strip()
+    if private_key_path:
+        if isinstance(private_key_path, str):
+            private_key_path = Path(private_key_path)
+        if private_key_path.exists() and private_key_path.is_file():
+            cli_ctx.logger.info(f"Reading private key from {private_key_path}")
+            private_key = private_key_path.read_text().strip()
 
-    if import_from_mnemonic:
+    elif import_from_mnemonic:
         if not hd_path:
             hd_path = ETHEREUM_DEFAULT_PATH
         mnemonic = click.prompt("Enter your mnemonic phrase", hide_input=True)
         EthAccount.enable_unaudited_hdwallet_features()
         account = EthAccount.from_mnemonic(mnemonic, account_path=hd_path)
         private_key = account.key.hex()
+
+    else:
+        private_key = input("Enter your private key: ")
 
     key_spec = ImportKeyRequest(
         alias=alias_name,
