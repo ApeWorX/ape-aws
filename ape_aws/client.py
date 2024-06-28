@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from typing import ClassVar
 
 import boto3  # type: ignore[import]
@@ -79,13 +80,11 @@ class ImportKeyRequest(CreateKeyModel):
 class ImportKey(ImportKeyRequest):
     key_id: str = Field(default=None, alias="KeyId")
     public_key: bytes = Field(default=None, alias="PublicKey")
-    private_key: str | bytes | None = Field(default=None, alias="PrivateKey")
+    private_key: str | bytes = Field(default=None, alias="PrivateKey")
     import_token: bytes = Field(default=None, alias="ImportToken")
 
     @field_validator("private_key")
     def validate_private_key(cls, value):
-        if not value:
-            return ec.generate_private_key(ec.SECP256K1(), default_backend())
         if value.startswith("0x"):
             value = value[2:]
         return value

@@ -1,4 +1,6 @@
 import click
+from pathlib import Path
+
 from ape.cli import ape_cli_context
 
 from ape_aws.accounts import AwsAccountContainer, KmsAccount
@@ -63,13 +65,6 @@ def create_key(
 @kms.command(name="import")
 @ape_cli_context()
 @click.option(
-    "-p",
-    "--private-key",
-    "private_key",
-    multiple=False,
-    help="The private key to import",
-)
-@click.option(
     "-a",
     "--admin",
     "administrators",
@@ -93,22 +88,20 @@ def create_key(
     metavar="str",
 )
 @click.argument("alias_name")
+@click.argument("private_key")
 def import_key(
     cli_ctx,
     alias_name: str,
-    private_key: bytes,
+    private_key: bytes | str | Path,
     administrators: list[str],
     users: list[str],
     description: str,
 ):
-    def ask_for_passphrase():
-        return click.prompt(
-            "Create Passphrase to encrypt account",
-            hide_input=True,
-            confirmation_prompt=True,
-        )
+    path = Path(private_key)
+    if path.exists() and path.is_file():
+        cli_ctx.logger.info(f"Reading private key from {path}")
+        private_key = path.read_text().strip()
 
-    passphrase = ask_for_passphrase()
     key_spec = ImportKeyRequest(
         alias=alias_name,
         description=description,  # type: ignore
@@ -130,8 +123,6 @@ def import_key(
     if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
         cli_ctx.abort("Key failed to import into KMS")
     cli_ctx.logger.success(f"Key imported successfully with ID: {key_id}")
-    aws_account_container = AwsAccountContainer(name="aws", account_type=KmsAccount)
-    aws_account_container.add_private_key(alias_name, passphrase, import_key_spec.private_key_hex)
 
 
 # TODO: Add `ape aws kms sign-message [message]`
@@ -141,9 +132,8 @@ def import_key(
 @kms.command(name="delete")
 @ape_cli_context()
 @click.argument("alias_name")
-@click.option("-p", "--purge", is_flag=True, help="Purge the key from the system")
 @click.option("-d", "--days", default=30, help="Number of days until key is deactivated")
-def schedule_delete_key(cli_ctx, alias_name, purge, days):
+def schedule_delete_key(cli_ctx, alias_name, days):
     if "alias" not in alias_name:
         alias_name = f"alias/{alias_name}"
     kms_account = None
@@ -156,7 +146,4 @@ def schedule_delete_key(cli_ctx, alias_name, purge, days):
 
     delete_key_spec = DeleteKey(alias=alias_name, key_id=kms_account.key_id, days=days)
     key_alias = kms_client.delete_key(delete_key_spec)
-    if purge:
-        aws_account_container = AwsAccountContainer(name="aws", account_type=KmsAccount)
-        aws_account_container.delete_account(key_alias)
     cli_ctx.logger.success(f"Key {key_alias} scheduled for deletion in {days} days")

@@ -1,32 +1,20 @@
 from functools import cached_property
 from json import dumps
-from pathlib import Path
 from typing import Any, Iterator, Optional
 
 from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
-from ape.utils.validators import _validate_account_passphrase
-from eth_account import Account as EthAccount
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
 from eth_typing import Hash32
-from eth_utils import keccak, to_bytes, to_checksum_address
+from eth_utils import keccak, to_checksum_address
 
 from .client import kms_client
 from .utils import _convert_der_to_rsv
 
 
 class AwsAccountContainer(AccountContainerAPI):
-    loaded_accounts: dict[str, "KmsAccount"] = {}
-
-    def model_post_init(self, __context: Any):
-        print("Initializing AWS KMS Account Container")
-        print([acc.alias for acc in self.accounts])
-
-    @property
-    def _keyfiles(self) -> list[Path]:
-        return [file for file in self.data_folder.glob("*.json")]
 
     @property
     def aliases(self) -> Iterator[str]:
@@ -37,49 +25,14 @@ class AwsAccountContainer(AccountContainerAPI):
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
-        def _load_account(key_alias, key_id, key_arn) -> AccountAPI:
-            filename = f"{key_alias}.json"
-            keyfile = self.data_folder.joinpath(filename)
-            if filename not in self._keyfiles:
-                self.loaded_accounts[keyfile.stem] = KmsAccount(
-                    key_alias=key_alias,
-                    key_id=key_id,
-                    key_arn=key_arn,
-                )
-                keyfile.write_text(self.loaded_accounts[keyfile.stem].dump_to_json())
-            return self.loaded_accounts[keyfile.stem]
-
         return map(
-            lambda x: _load_account(
+            lambda x: KmsAccount(
                 key_alias=x.alias.replace("alias/", ""),
                 key_id=x.key_id,
                 key_arn=x.arn,
             ),
             kms_client.raw_aliases,
         )
-
-    def add_private_key(self, alias, passphrase, private_key):
-        kms_account = self.loaded_accounts[alias]
-        _validate_account_passphrase(passphrase)
-        account = EthAccount.from_key(to_bytes(hexstr=private_key))
-        keyfile = self.data_folder.joinpath(f"{alias}.json")
-        account = EthAccount.encrypt(account.key, passphrase)
-        model = kms_account.model_dump()
-        model["address"] = kms_account.address
-        del account["address"]
-        model.update(account)
-        keyfile.write_text(dumps(model, indent=4))
-        print("Key cached successfully")
-        return
-
-    def delete_account(self, alias):
-        alias = alias.replace("alias/", "")
-        keyfile = self.data_folder.joinpath(f"{alias}.json")
-        if keyfile.exists():
-            keyfile.unlink()
-            print(f"Key {alias} deleted successfully")
-        else:
-            print(f"Key {alias} not found")
 
 
 class KmsAccount(AccountAPI):
@@ -155,7 +108,3 @@ class KmsAccount(AccountAPI):
 
         return txn
 
-    def dump_to_json(self, indent: int = 4):
-        model = self.model_dump()
-        model["address"] = self.address
-        return dumps(model, indent=indent)
