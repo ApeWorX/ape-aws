@@ -119,6 +119,7 @@ def import_key(
     import_from_mnemonic: bool,
     hd_path: str,
 ):
+    breakpoint()
     if private_key_path:
         if isinstance(private_key_path, str):
             private_key_path = Path(private_key_path)
@@ -135,7 +136,7 @@ def import_key(
         private_key = account.key.hex()
 
     else:
-        private_key = input("Enter your private key: ")
+        private_key = click.prompt("Enter your private key: ", hide_input=True)
 
     key_spec = ImportKeyRequest(
         alias=alias_name,
