@@ -63,7 +63,7 @@ You can also import a private key from a file (from hex or bytes):
 
 ```bash
 $ ape aws kms import KeyAlias --private-key <path-to-private-key>
-INFO (ape-aws): Reading private key from <private-key-file>
+INFO: Reading private key from <private-key-file>
 SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
 ```
 
