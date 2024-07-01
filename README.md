@@ -42,13 +42,37 @@ ape aws -h
 To create a new key:
 
 ```bash
-ape aws kms create 'KeyAlias' 'Description of new key'
+ape aws kms create KeyAlias 'Description of new key'
 ```
 
 To delete this key:
 
 ```bash
-ape aws kms delete 'KeyAlias'
+ape aws kms delete KeyAlias
+```
+
+To import an existing private key into KMS:
+
+```bash
+$ ape aws kms import KeyAlias
+Enter your private key:
+SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
+```
+
+You can also import a private key from a file (from hex or bytes):
+
+```bash
+$ ape aws kms import KeyAlias --private-key <path-to-private-key>
+INFO (ape-aws): Reading private key from <private-key-file>
+SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
+```
+
+You can import using a mnemonic phrase as well:
+
+```bash
+$ ape aws kms import KeyAlias --use-mnemonic
+Enter your mnemonic phrase:
+SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
 ```
 
 ### IPython

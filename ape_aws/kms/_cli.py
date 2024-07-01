@@ -135,7 +135,7 @@ def import_key(
         private_key = account.key.hex()
 
     else:
-        private_key = click.prompt("Enter your private key: ", hide_input=True)
+        private_key = click.prompt("Enter your private key", hide_input=True)
 
     key_spec = ImportKeyRequest(
         alias=alias_name,
