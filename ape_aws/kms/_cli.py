@@ -21,7 +21,6 @@ def kms():
     "administrators",
     multiple=True,
     help="Apply key policy to a list of administrators if applicable, ex. -a ARN1, -a ARN2",
-    metavar="list[ARN]",
 )
 @click.option(
     "-u",
@@ -29,7 +28,6 @@ def kms():
     "users",
     multiple=True,
     help="Apply key policy to a list of users if applicable, ex. -u ARN1, -u ARN2",
-    metavar="list[ARN]",
 )
 @click.option(
     "-d",
@@ -71,7 +69,6 @@ def create_key(
     "private_key_path",
     type=click.Path(),
     help="The private key you intend to import",
-    metavar="Path",
 )
 @click.option(
     "-a",
@@ -79,7 +76,6 @@ def create_key(
     "administrators",
     multiple=True,
     help="Apply key policy to a list of administrators if applicable, ex. -a ARN1, -a ARN2",
-    metavar="ARN",
 )
 @click.option(
     "-u",
@@ -87,14 +83,12 @@ def create_key(
     "users",
     multiple=True,
     help="Apply key policy to a list of users if applicable, ex. -u ARN1, -u ARN2",
-    metavar="list[ARN]",
 )
 @click.option(
     "-d",
     "--description",
     "description",
     help="The description of the key you intend to create.",
-    metavar="str",
 )
 @click.option(
     "--use-mnemonic",
@@ -106,7 +100,7 @@ def create_key(
     "--hd-path",
     "hd_path",
     help="The hierarchical deterministic path to derive the key from",
-    metavar="str",
+    default=ETHEREUM_DEFAULT_PATH,
 )
 @click.argument("alias_name")
 def import_key(
@@ -127,8 +121,6 @@ def import_key(
             private_key = private_key_path.read_text().strip()
 
     elif import_from_mnemonic:
-        if not hd_path:
-            hd_path = ETHEREUM_DEFAULT_PATH
         mnemonic = click.prompt("Enter your mnemonic phrase", hide_input=True)
         EthAccount.enable_unaudited_hdwallet_features()
         account = EthAccount.from_mnemonic(mnemonic, account_path=hd_path)

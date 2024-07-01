@@ -56,7 +56,7 @@ To import an existing private key into KMS:
 ```bash
 $ ape aws kms import KeyAlias
 Enter your private key:
-SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
+SUCCESS: Key imported successfully with ID: <key-id>
 ```
 
 You can also import a private key from a file (from hex or bytes):
@@ -64,7 +64,7 @@ You can also import a private key from a file (from hex or bytes):
 ```bash
 $ ape aws kms import KeyAlias --private-key <path-to-private-key>
 INFO: Reading private key from <private-key-file>
-SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
+SUCCESS: Key imported successfully with ID: <key-id>
 ```
 
 You can import using a mnemonic phrase as well:
