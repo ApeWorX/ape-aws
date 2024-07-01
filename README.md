@@ -72,7 +72,7 @@ You can import using a mnemonic phrase as well:
 ```bash
 $ ape aws kms import KeyAlias --use-mnemonic
 Enter your mnemonic phrase:
-SUCCESS (ape-aws): Key imported successfully with ID: <key-id>
+SUCCESS: Key imported successfully with ID: <key-id>
 ```
 
 ### IPython
