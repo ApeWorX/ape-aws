@@ -42,7 +42,7 @@ ape aws -h
 To create a new key:
 
 ```bash
-ape aws kms create KeyAlias 'Description of new key'
+ape aws kms create KeyAlias -d 'Description of new key'
 ```
 
 To delete this key:
