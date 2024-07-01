@@ -14,9 +14,10 @@ from .utils import _convert_der_to_rsv
 
 
 class AwsAccountContainer(AccountContainerAPI):
+
     @property
     def aliases(self) -> Iterator[str]:
-        return map(lambda x: x.alias, kms_client.raw_aliases)
+        return map(lambda x: x.alias.replace("alias/", ""), kms_client.raw_aliases)
 
     def __len__(self) -> int:
         return len(kms_client.raw_aliases)
@@ -25,7 +26,7 @@ class AwsAccountContainer(AccountContainerAPI):
     def accounts(self) -> Iterator[AccountAPI]:
         return map(
             lambda x: KmsAccount(
-                key_alias=x.alias,
+                key_alias=x.alias.replace("alias/", ""),
                 key_id=x.key_id,
                 key_arn=x.arn,
             ),
@@ -40,7 +41,7 @@ class KmsAccount(AccountAPI):
 
     @property
     def alias(self) -> str:
-        return self.key_alias.replace("alias/", "")
+        return self.key_alias
 
     @property
     def public_key(self):
