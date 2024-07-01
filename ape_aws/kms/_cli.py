@@ -149,9 +149,7 @@ def import_key(
     try:
         response = kms_client.import_key(import_key_spec)
         if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
-            cli_ctx.abort(
-                f"Key failed to import into KMS, {response['Error']}"
-            )
+            cli_ctx.abort(f"Key failed to import into KMS, {response['Error']}")
         cli_ctx.logger.success(f"Key imported successfully with ID: {key_id}")
     except Exception as e:
         cli_ctx.logger.error(f"Key failed to import into KMS: {e}")
