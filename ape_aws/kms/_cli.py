@@ -79,7 +79,7 @@ def create_key(
     "administrators",
     multiple=True,
     help="Apply key policy to a list of administrators if applicable, ex. -a ARN1, -a ARN2",
-    metavar="list[ARN]",
+    metavar="ARN",
 )
 @click.option(
     "-u",
