@@ -146,10 +146,15 @@ def import_key(
         private_key=private_key,  # type: ignore
         import_token=import_token,  # type: ignore
     )
-    response = kms_client.import_key(import_key_spec)
-    if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
-        cli_ctx.abort("Key failed to import into KMS")
-    cli_ctx.logger.success(f"Key imported successfully with ID: {key_id}")
+    try:
+        response = kms_client.import_key(import_key_spec)
+        if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+            cli_ctx.abort(
+                f"Key failed to import into KMS, {response['Error']}"
+            )
+        cli_ctx.logger.success(f"Key imported successfully with ID: {key_id}")
+    except Exception as e:
+        cli_ctx.logger.error(f"Key failed to import into KMS: {e}")
 
 
 # TODO: Add `ape aws kms sign-message [message]`
