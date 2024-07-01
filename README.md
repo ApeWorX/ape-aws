@@ -106,6 +106,33 @@ To begin, create a virtual environment set up and activate the virtual environme
    [Python3](https://www.python.org/downloads/) and
    [pip](https://pip.pypa.io/en/stable/installation/) installed on your workstation
 
+## AWS Setup
+
+#### For Mac and Linux
+Create a `~/.aws` folder in your home directory:
+```bash
+mkdir ~/.aws
+```
+
+Note: get your access key and key id from your IAM in you AWS account [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html).
+Create a `credentials` file in the `~/.aws` folder:
+```bash
+cat <<EOF > ~/.aws/credentials
+> [default]
+> aws_access_key_id = YOUR_ACCESS_KEY
+> aws_secret_access_key = YOUR_SECRET
+> EOF
+```
+
+Create a `config` file in the `~/.aws` folder:
+```bash
+cat <<EOF > ~/.aws/config
+> [default]
+> region = YOUR_REGION
+> output = json
+> EOF
+```
+
 ## AWS KMS Key Import Steps
 
 For manual setup, follow this [article](https://aws.amazon.com/blogs/database/import-ethereum-private-keys-to-aws-kms/)
