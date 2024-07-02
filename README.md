@@ -118,19 +118,19 @@ Note: get your access key and key id from your IAM in you AWS account [here](htt
 Create a `credentials` file in the `~/.aws` folder:
 ```bash
 cat <<EOF > ~/.aws/credentials
-> [default]
-> aws_access_key_id = YOUR_ACCESS_KEY
-> aws_secret_access_key = YOUR_SECRET
-> EOF
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY
+aws_secret_access_key = YOUR_SECRET
+EOF
 ```
 
 Create a `config` file in the `~/.aws` folder:
 ```bash
 cat <<EOF > ~/.aws/config
-> [default]
-> region = YOUR_REGION
-> output = json
-> EOF
+[default]
+region = YOUR_REGION
+output = json
+EOF
 ```
 
 ## AWS KMS Key Import Steps
