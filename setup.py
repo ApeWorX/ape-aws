@@ -58,7 +58,7 @@ setup(
         "eth-ape>=0.8.2,<0.9",
         "ecdsa>=0.19.0,<1",
         "cryptography>=37.0.4,<38",
-        "cchecksum>=0.0.3,<1",
+        "cchecksum",  # NOTE: peer dependency of ape
     ],  # NOTE: Add 3rd party libraries here
     entry_points={"ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]},
     python_requires=">=3.7,<4",
