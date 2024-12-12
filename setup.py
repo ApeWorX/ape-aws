@@ -16,7 +16,7 @@ extras_require = {
         "isort>=5.10.1,<6",  # Import sorting linter
     ],
     "release": [  # `release` GitHub Action job uses this
-        "setuptools",  # Installation tool
+        "setuptools>=75.6.0",  # Installation tool
         "wheel",  # Packaging tool
         "twine",  # Package upload tool
     ],
@@ -79,5 +79,6 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
 )
