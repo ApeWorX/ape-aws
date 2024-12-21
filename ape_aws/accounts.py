@@ -3,11 +3,12 @@ from typing import Any, Iterator, Optional
 
 from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
+from cchecksum import to_checksum_address
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
 from eth_typing import Hash32
-from eth_utils import keccak, to_checksum_address
+from eth_utils import keccak
 
 from .client import kms_client
 from .utils import _convert_der_to_rsv
