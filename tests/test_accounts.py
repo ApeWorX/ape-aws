@@ -33,7 +33,9 @@ def aws_account_container():
 
 @pytest.fixture(scope="session")
 def kms_account(aws_account_container):
-    return list(aws_account_container.accounts)[1]
+    for account in aws_account_container.accounts:
+        if account.alias == "plugin-test":
+            return account
 
 
 def test_signing_message(kms_account, string_message):
