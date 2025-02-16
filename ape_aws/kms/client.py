@@ -84,7 +84,7 @@ class KmsKey(BaseModel):
         assert isinstance(self.cached_alias, str)  # mypy
         return self.cached_alias
 
-    @alias.setter
+    @alias.setter  # type: ignore[attr-defined]
     def set_alias(self, alias: str):
         self.kms_client.update_alias(
             AliasName=f"alias/{alias}",

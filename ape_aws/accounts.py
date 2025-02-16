@@ -79,11 +79,12 @@ class KmsAccount(AccountAPI):
             TransactionAPI | None
         """
         unsigned_txn = serializable_unsigned_transaction_from_dict(txn.model_dump()).hash()
-        if not (msg_sig := self._sign_raw_hash(unsigned_txn)):
+        if not (msg_sig := self.sign_raw_msghash(HexBytes(unsigned_txn))):
             return None
         txn.signature = TransactionSignature(
             **_convert_der_to_rsv(msg_sig, (2 * txn.chain_id + 35) if txn.chain_id else 27)
         )
+        assert txn.signature  # make mypy happy
         # TODO: Figure out how to properly compute v
         if not self.check_signature(txn):
             txn.signature = TransactionSignature(
