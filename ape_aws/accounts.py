@@ -8,6 +8,8 @@ from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
 from eth_typing import Hash32
 
+from ape_aws.exceptions import ApeAwsException
+
 from .client import AwsClient
 from .kms.client import KmsKey
 from .utils import _convert_der_to_rsv
@@ -49,7 +51,7 @@ class KmsAccount(AccountAPI):
             return None
 
         msg_sig = MessageSignature(**_convert_der_to_rsv(signature, 27))
-        # TODO: Figure out how to properly compute v
+        # TODO: Figure out how to properly compute v in `_convert_der_to_rsv`
         if not self.check_signature(msghash, msg_sig, recover_using_eip191=False):
             msg_sig = MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
 
@@ -58,13 +60,16 @@ class KmsAccount(AccountAPI):
     def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
         if isinstance(msg, SignableMessage):
             message = msg
-        if isinstance(msg, str):
+        elif isinstance(msg, str):
             if msg.startswith("0x"):
                 message = encode_defunct(hexstr=msg)
             else:
                 message = encode_defunct(text=msg)
-        if isinstance(msg, bytes):
+        elif isinstance(msg, bytes):
             message = encode_defunct(primitive=msg)
+        else:
+            raise ApeAwsException(f"Cannot sign {type(msg)}")
+
         return self.sign_raw_msghash(_hash_eip191_message(message))
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
@@ -78,19 +83,22 @@ class KmsAccount(AccountAPI):
         Returns:
             TransactionAPI | None
         """
-        unsigned_txn = serializable_unsigned_transaction_from_dict(txn.model_dump()).hash()
+        txn_dict = txn.model_dump()
+        # NOTE: remove this so doesn't raise below
+        txn_dict.pop("from", None)
+        unsigned_txn = serializable_unsigned_transaction_from_dict(txn_dict).hash()
+
         if not (msg_sig := self.sign_raw_msghash(HexBytes(unsigned_txn))):
             return None
+
         txn.signature = TransactionSignature(
-            **_convert_der_to_rsv(msg_sig, (2 * txn.chain_id + 35) if txn.chain_id else 27)
+            # Include 155 chain ID protection
+            # NOTE: We already added 27 above
+            # v=((msg_sig.v - 27) + (2 * txn.chain_id) + 35) if txn.chain_id else msg_sig.v,
+            v=msg_sig.v - 27,
+            # TODO: Figure out why EIP 155 protection isn't working right...
+            r=msg_sig.r,
+            s=msg_sig.s,
         )
-        assert txn.signature  # make mypy happy
-        # TODO: Figure out how to properly compute v
-        if not self.check_signature(txn):
-            txn.signature = TransactionSignature(
-                v=txn.signature.v + 1,
-                r=txn.signature.r,
-                s=txn.signature.s,
-            )
 
         return txn
