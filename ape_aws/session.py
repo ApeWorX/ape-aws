@@ -37,7 +37,7 @@ class Session(ManagerAccessMixin):
             session_kwargs["profile_name"] = self.config.default_profile
 
         else:
-            raise ApeAwsException("Can't determine profile to use")
+            session_kwargs["profile_name"] = "default"
 
         if region_name := os.environ.get("AWS_DEFAULT_REGION"):
             session_kwargs["region_name"] = region_name
