@@ -33,6 +33,9 @@ class Session(ManagerAccessMixin):
             session_kwargs["aws_access_key_id"] = account_id
             session_kwargs["aws_secret_access_key"] = secret_key
 
+        elif profile_envvar := os.environ.get("AWS_PROFILE"):
+            session_kwargs["profile_name"] = profile_envvar
+
         elif self.config.default_profile:
             session_kwargs["profile_name"] = self.config.default_profile
 
