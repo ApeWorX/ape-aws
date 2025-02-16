@@ -50,7 +50,7 @@ setup(
     long_description_content_type="text/markdown",
     author="ApeWorX Ltd.",
     author_email="admin@apeworx.io",
-    url="https://github.com/ApeWorX/ape-aws-kms",
+    url="https://github.com/ApeWorX/ape-aws",
     include_package_data=True,
     install_requires=[
         "importlib-metadata ; python_version<'3.8'",
@@ -62,12 +62,12 @@ setup(
     entry_points={"ape_cli_subcommands": ["ape_aws=ape_aws._cli:cli"]},
     python_requires=">=3.7,<4",
     extras_require=extras_require,
-    py_modules=["ape_aws_kms"],
+    py_modules=["ape_aws"],
     license="Apache-2.0",
     zip_safe=False,
     keywords="ethereum",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    package_data={"ape_aws_kms": ["py.typed"]},
+    package_data={"ape_aws": ["py.typed"]},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
