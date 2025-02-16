@@ -7,63 +7,50 @@ from eth_account._utils.legacy_transactions import serializable_unsigned_transac
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
 from eth_typing import Hash32
-from eth_utils import keccak, to_checksum_address
 
-from .client import kms_client
+from .client import AwsClient
+from .kms.client import KmsKey
 from .utils import _convert_der_to_rsv
 
 
-class AwsAccountContainer(AccountContainerAPI):
+class AwsAccountContainer(AwsClient, AccountContainerAPI):
+    def __init__(self, *args, **kwargs):
+        super(AwsClient, self).__init__()  # NOTE: Use config/envvar default
+        super(AccountContainerAPI, self).__init__(*args, **kwargs)
 
     @property
     def aliases(self) -> Iterator[str]:
-        return map(lambda x: x.alias.replace("alias/", ""), kms_client.raw_aliases)
+        yield from iter(self.keys)
 
     def __len__(self) -> int:
-        return len(kms_client.raw_aliases)
+        return len(self.keys)
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
-        return map(
-            lambda x: KmsAccount(
-                key_alias=x.alias.replace("alias/", ""),
-                key_id=x.key_id,
-                key_arn=x.arn,
-            ),
-            kms_client.raw_aliases,
-        )
+        return map(lambda key: KmsAccount(key=key), self.keys.values())
 
 
 class KmsAccount(AccountAPI):
-    key_alias: str
-    key_id: str
-    key_arn: str
+    key: KmsKey
 
     @property
     def alias(self) -> str:
-        return self.key_alias
-
-    @property
-    def public_key(self):
-        return kms_client.get_public_key(self.key_id)
+        return self.key.alias
 
     @cached_property
     def address(self) -> AddressType:
-        return to_checksum_address(keccak(self.public_key[-64:])[-20:].hex().lower())
-
-    def _sign_raw_hash(self, msghash: HexBytes | Hash32) -> Optional[bytes]:
-        return kms_client.sign(self.key_id, msghash)
+        return self.key.address
 
     def sign_raw_msghash(self, msghash: HexBytes | Hash32) -> Optional[MessageSignature]:
         if len(msghash) != 32:
             return None
 
-        if not (signature := self._sign_raw_hash(msghash)):
+        if not (signature := self.key.sign(msghash)):
             return None
 
         msg_sig = MessageSignature(**_convert_der_to_rsv(signature, 27))
         # TODO: Figure out how to properly compute v
-        if not self.check_signature(msghash, msg_sig):
+        if not self.check_signature(msghash, msg_sig, recover_using_eip191=False):
             msg_sig = MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
 
         return msg_sig

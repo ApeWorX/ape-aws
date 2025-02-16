@@ -12,7 +12,7 @@ Ape plugin to make transactions through AWS KMS
 You can install the latest release via [`pip`](https://pypi.org/project/pip/):
 
 ```bash
-pip install <PYPI_NAME>
+pip install ape-aws
 ```
 
 ### via `setuptools`
@@ -20,8 +20,8 @@ pip install <PYPI_NAME>
 You can clone the repository and use [`setuptools`](https://github.com/pypa/setuptools) for the most up-to-date version:
 
 ```bash
-git clone https://github.com/ApeWorX/<PYPI_NAME>.git
-cd <PYPI_NAME>
+git clone https://github.com/ApeWorX/ape-aws.git
+cd ape-aws
 python3 setup.py install
 ```
 
@@ -39,41 +39,49 @@ List commands:
 ape aws -h
 ```
 
-To create a new key:
+See logged in profile (useful for debugging auth in containers)
 
 ```bash
-ape aws kms create KeyAlias -d 'Description of new key'
+ape aws whoami
 ```
 
-To delete this key:
+To create a new user (recommended for cloud usage)
 
 ```bash
-ape aws kms delete KeyAlias
+ape aws users new USER
 ```
 
-To import an existing private key into KMS:
+To delete this user (WARNING this is permanent)
 
 ```bash
-$ ape aws kms import KeyAlias
-Enter your private key:
-SUCCESS: Key imported successfully with ID: <key-id>
+ape aws users remove USER
 ```
 
-You can also import a private key from a file (from hex or bytes):
+Create an access key for this user (WARNING don't lose generated token)
 
 ```bash
-$ ape aws kms import KeyAlias --private-key <path-to-private-key>
-INFO: Reading private key from <private-key-file>
-SUCCESS: Key imported successfully with ID: <key-id>
+ape aws users tokens new USER > .env.USER
 ```
 
-You can import using a mnemonic phrase as well:
+To create a new Ethereum signing key (recommended to generate)
 
 ```bash
-$ ape aws kms import KeyAlias --use-mnemonic
-Enter your mnemonic phrase:
-SUCCESS: Key imported successfully with ID: <key-id>
+ape aws keys generate KEY
 ```
+
+To schedule this signing key for deletion (WARNING takes 30 days)
+
+```bash
+ape aws keys remove KEY
+```
+
+To grant your user access to the signing key (don't forget to do this!)
+
+```bash
+ape aws keys grant KEY -u USER
+```
+
+
 
 ### IPython
 
@@ -84,10 +92,22 @@ ape console
 ```
 
 ```python
-In [1]: kms_acct = accounts.load("KeyAlias")
-In [2]: kms_acct.sign_message("12345")
+In [1]: kms_signer = accounts.load("KEY")
+In [2]: kms_signer.sign_message("12345")
 Out[2]: <MessageSignature v=27, r=0x..., s=0x...>
 ```
+
+Now to test your new IAM user's access, you can do the following
+
+```bash
+env $(echo .env.USER | xargs) ape console
+```
+
+and you should be able to do the same as the above!
+
+Use the access token above to run with your containers by supplying them as environment variables
+
+WARNING: Don't forget to cycle your access tokens on a regular basis to prevent access leakage!
 
 ## Development
 
