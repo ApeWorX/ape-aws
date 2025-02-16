@@ -48,6 +48,9 @@ class Session(ManagerAccessMixin):
         elif self.config.default_region:
             session_kwargs["region_name"] = self.config.default_region
 
+        else:
+            session_kwargs["region_name"] = "us-east-1"
+
         try:
             self.__class__.session = AwsSession(**session_kwargs)
 
