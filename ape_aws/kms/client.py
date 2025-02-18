@@ -160,7 +160,7 @@ class KmsKey(BaseModel):
 
     def delete(self, days: int = 30):
         if self.alias:
-            self.kms_client.delete_alias(AliasName=self.alias)
+            self.kms_client.delete_alias(AliasName=f"alias/{self.alias}")
 
         self.kms_client.schedule_key_deletion(
             KeyId=self.id,
