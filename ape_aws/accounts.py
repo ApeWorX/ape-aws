@@ -11,7 +11,7 @@ from eth_typing import Hash32
 from ape_aws.exceptions import ApeAwsException
 
 from .client import AwsClient
-from .kms.client import KmsKey
+from .kms import KmsKey
 from .utils import _convert_der_to_rsv
 
 
