@@ -11,7 +11,7 @@ from eth_typing import Hash32
 from ape_aws.exceptions import ApeAwsException
 
 from .client import AwsClient
-from .kms.client import KmsKey
+from .kms import KmsKey
 from .utils import _convert_der_to_rsv
 
 
@@ -51,8 +51,8 @@ class KmsAccount(AccountAPI):
             return None
 
         msg_sig = MessageSignature(**_convert_der_to_rsv(signature, 27))
-        # TODO: Figure out how to properly compute v in `_convert_der_to_rsv`
         if not self.check_signature(msghash, msg_sig, recover_using_eip191=False):
+            # NOTE: Best way to determine parity is just to try recovery
             msg_sig = MessageSignature(v=msg_sig.v + 1, r=msg_sig.r, s=msg_sig.s)
 
         return msg_sig
@@ -86,19 +86,16 @@ class KmsAccount(AccountAPI):
         txn_dict = txn.model_dump()
         # NOTE: remove this so doesn't raise below
         txn_dict.pop("from", None)
-        unsigned_txn = serializable_unsigned_transaction_from_dict(txn_dict).hash()
+        unsigned_txn_hash = serializable_unsigned_transaction_from_dict(txn_dict).hash()
 
-        if not (msg_sig := self.sign_raw_msghash(HexBytes(unsigned_txn))):
+        if not (signature := self.sign_raw_msghash(HexBytes(unsigned_txn_hash))):
             return None
 
-        txn.signature = TransactionSignature(
-            # Include 155 chain ID protection
-            # NOTE: We already added 27 above
-            # v=((msg_sig.v - 27) + (2 * txn.chain_id) + 35) if txn.chain_id else msg_sig.v,
-            v=msg_sig.v - 27,
-            # TODO: Figure out why EIP 155 protection isn't working right...
-            r=msg_sig.r,
-            s=msg_sig.s,
-        )
+        # NOTE: We already added 27 to v above, so substract it from v to normalize to {0,1}
+        v = signature.v - 27
+        if txn.chain_id and txn.type == 0:
+            # Include 155 chain ID protection offset
+            v += (2 * txn.chain_id) + 35
 
+        txn.signature = TransactionSignature(v=v, r=signature.r, s=signature.s)
         return txn

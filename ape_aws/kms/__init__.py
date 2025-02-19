@@ -1,5 +1,6 @@
-from .client import KmsClient
+from .client import KmsClient, KmsKey
 
 __all__ = [
     "KmsClient",
+    "KmsKey",
 ]
