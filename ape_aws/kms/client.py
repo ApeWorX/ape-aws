@@ -72,7 +72,7 @@ class KmsKey(BaseModel):
 
     @field_validator("cached_alias")
     def prune_alias_prepend(cls, value: str):
-        return value.replace("alias/", "")
+        return value.replace("alias/ape-aws/v1/", "")
 
     @property
     def alias(self) -> str:
@@ -80,14 +80,14 @@ class KmsKey(BaseModel):
             return self.cached_alias
 
         response = self.kms_client.list_aliases(KeyId=self.id)
-        self.cached_alias = response["Aliases"][0]["AliasName"].replace("alias/", "")
+        self.cached_alias = response["Aliases"][0]["AliasName"].replace("alias/ape-aws/v1/", "")
         assert isinstance(self.cached_alias, str)  # mypy
         return self.cached_alias
 
     @alias.setter  # type: ignore[attr-defined]
     def set_alias(self, alias: str):
         self.kms_client.update_alias(
-            AliasName=f"alias/{alias}",
+            AliasName=f"alias/ape-aws/v1/{alias}",
             TargetKeyId=self.id,
             KeyUsage="SIGN_VERIFY",
         )
@@ -160,7 +160,7 @@ class KmsKey(BaseModel):
 
     def delete(self, days: int = 30):
         if self.alias:
-            self.kms_client.delete_alias(AliasName=f"alias/{self.alias}")
+            self.kms_client.delete_alias(AliasName=f"alias/ape-aws/v1/{self.alias}")
 
         self.kms_client.schedule_key_deletion(
             KeyId=self.id,
@@ -181,7 +181,8 @@ class KmsClient(Session):
         paginator = self.kms_client.get_paginator("list_aliases")
         pages = map(lambda data: data["Aliases"], paginator.paginate())
         # NOTE: Use `itertools.chain` since it is segmented into list of lists
-        key_data = filter(lambda page: "TargetKeyId" in page, chain(*pages))
+        # NOTE: Just look for `alias/ape-aws/` alias in case we add v2, v3, etc.
+        key_data = filter(lambda k: k["AliasName"].startswith("alias/ape-aws/"), chain(*pages))
         keys = map(KmsKey.model_validate, key_data)
         return {key.alias: key for key in keys}
 
@@ -200,7 +201,7 @@ class KmsClient(Session):
 
         self.kms_client.create_alias(
             TargetKeyId=key.id,
-            AliasName=f"alias/{alias}",
+            AliasName=f"alias/ape-aws/v1{alias}",
         )
 
         key.cached_alias = alias
@@ -230,7 +231,7 @@ class KmsClient(Session):
 
         self.kms_client.create_alias(
             TargetKeyId=key.id,
-            AliasName=f"alias/{alias}",
+            AliasName=f"alias/ape-aws/v1/{alias}",
             KeyUsage="SIGN_VERIFY",
         )
 
