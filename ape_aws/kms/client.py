@@ -4,7 +4,7 @@ from itertools import chain
 from typing import TYPE_CHECKING, ClassVar
 
 from ape.types import AddressType
-from botocore.exceptions import BotoCoreError
+from botocore.exceptions import BotoCoreError  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from ape_aws.exceptions import AwsAccessError

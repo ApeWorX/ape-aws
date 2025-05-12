@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import cached_property
 from typing import TYPE_CHECKING, ClassVar
 
-from botocore.exceptions import BotoCoreError
+from botocore.exceptions import BotoCoreError  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field, model_validator
 
 from ape_aws.exceptions import AwsAccessError
