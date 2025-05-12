@@ -98,7 +98,7 @@ class IamClient(Session):
     KEY_ACCESS_POLICY = dict(
         Sid="ApeAWSv1",
         Effect="Allow",
-        Action=["kms:ListAliases", "kms:Sign", "kms:Verify", "kms:GetPublicKey"],
+        Action=["kms:ListAliases", "kms:Sign", "kms:Verify", "kms:GetPublicKey", "kms:DescribeKey"],
         Resource="*",
     )
 
