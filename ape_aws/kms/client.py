@@ -209,7 +209,7 @@ class KmsClient(Session):
 
         self.kms_client.create_alias(
             TargetKeyId=key.id,
-            AliasName=f"alias/ape-aws/v1{alias}",
+            AliasName=f"alias/ape-aws/v1/{alias}",
         )
 
         key.cached_alias = alias
