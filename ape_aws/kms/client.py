@@ -4,8 +4,10 @@ from itertools import chain
 from typing import TYPE_CHECKING, ClassVar
 
 from ape.types import AddressType
+from botocore.exceptions import BotoCoreError
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
+from ape_aws.exceptions import AwsAccessError
 from ape_aws.session import Session
 
 if TYPE_CHECKING:
@@ -180,9 +182,15 @@ class KmsClient(Session):
         # NOTE: Uses aliases to get alias faster (no additional lookups needed)
         paginator = self.kms_client.get_paginator("list_aliases")
         pages = map(lambda data: data["Aliases"], paginator.paginate())
-        # NOTE: Use `itertools.chain` since it is segmented into list of lists
-        # NOTE: Just look for `alias/ape-aws/` alias in case we add v2, v3, etc.
-        key_data = filter(lambda k: k["AliasName"].startswith("alias/ape-aws/"), chain(*pages))
+
+        try:
+            # NOTE: Use `itertools.chain` since it is segmented into list of lists
+            # NOTE: Just look for `alias/ape-aws/` alias in case we add v2, v3, etc.
+            key_data = filter(lambda k: k["AliasName"].startswith("alias/ape-aws/"), chain(*pages))
+        except BotoCoreError as e:
+            # NOTE: Handle here since `.keys` is the main access point for the external API
+            raise AwsAccessError(e)
+
         keys = map(KmsKey.model_validate, key_data)
         return {key.alias: key for key in keys}
 

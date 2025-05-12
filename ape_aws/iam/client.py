@@ -3,8 +3,10 @@ from datetime import datetime
 from functools import cached_property
 from typing import TYPE_CHECKING, ClassVar
 
+from botocore.exceptions import BotoCoreError
 from pydantic import BaseModel, Field, model_validator
 
+from ape_aws.exceptions import AwsAccessError
 from ape_aws.session import Session
 
 if TYPE_CHECKING:
@@ -108,8 +110,15 @@ class IamClient(Session):
 
     @cached_property
     def users(self) -> dict[str, IamUser]:
-        response = self.iam_client.list_users()
+        try:
+            response = self.iam_client.list_users()
+
+        except BotoCoreError as e:
+            # NOTE: Handle here since `.users` is the main access point for the external API
+            raise AwsAccessError(e)
+
         users = map(IamUser.model_validate, response.get("Users", []))
+
         return {user.name: user for user in users}
 
     def create_user(self, user_name: str) -> IamUser:
