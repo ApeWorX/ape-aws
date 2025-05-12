@@ -25,12 +25,14 @@ class AwsAccountContainer(AwsClient, AccountContainerAPI):
     @property
     def keys(self) -> dict[str, KmsKey]:  # type: ignore[syntax]
         try:
-            return super(AwsClient, self).keys
+            keys = super(AwsClient, self).keys
 
         except AwsAccessError as e:
             # NOTE: Do not raise here, instead just log warning (prevent issues w/ Ape API)
             logger.warning(str(e))
             return {}
+
+        return {alias: key for alias, key in keys.items() if key.enabled}
 
     @property
     def aliases(self) -> Iterator[str]:
