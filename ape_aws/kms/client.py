@@ -77,6 +77,14 @@ class KmsKey(BaseModel):
         return value.replace("alias/ape-aws/v1/", "")
 
     @property
+    def metadata(self) -> dict:
+        return self.kms_client.describe_key(KeyId=self.id)["KeyMetadata"]
+
+    @property
+    def enabled(self) -> bool:
+        return self.metadata.get("Enabled", False)
+
+    @property
     def alias(self) -> str:
         if self.cached_alias is not None:
             return self.cached_alias
