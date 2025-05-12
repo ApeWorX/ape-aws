@@ -189,7 +189,7 @@ class KmsClient(Session):
             key_data = filter(lambda k: k["AliasName"].startswith("alias/ape-aws/"), chain(*pages))
         except BotoCoreError as e:
             # NOTE: Handle here since `.keys` is the main access point for the external API
-            raise AwsAccessError(e)
+            raise AwsAccessError(e) from e
 
         keys = map(KmsKey.model_validate, key_data)
         return {key.alias: key for key in keys}

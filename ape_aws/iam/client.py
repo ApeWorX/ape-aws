@@ -115,7 +115,7 @@ class IamClient(Session):
 
         except BotoCoreError as e:
             # NOTE: Handle here since `.users` is the main access point for the external API
-            raise AwsAccessError(e)
+            raise AwsAccessError(e) from e
 
         users = map(IamUser.model_validate, response.get("Users", []))
 
