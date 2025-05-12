@@ -1,7 +1,8 @@
 from functools import cached_property
 from typing import Any, Iterator, Optional
 
-from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
+from ape.api import AccountAPI, AccountContainerAPI, TransactionAPI
+from ape.logging import logger
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
 from eth_account.messages import _hash_eip191_message, encode_defunct
@@ -11,7 +12,8 @@ from eth_typing import Hash32
 from ape_aws.exceptions import ApeAwsException
 
 from .client import AwsClient
-from .kms import KmsKey
+from .exceptions import AwsAccessError
+from .kms.client import KmsKey
 from .utils import _convert_der_to_rsv
 
 
@@ -19,6 +21,16 @@ class AwsAccountContainer(AwsClient, AccountContainerAPI):
     def __init__(self, *args, **kwargs):
         super(AwsClient, self).__init__()  # NOTE: Use config/envvar default
         super(AccountContainerAPI, self).__init__(*args, **kwargs)
+
+    @property
+    def keys(self) -> dict[str, KmsKey]:  # type: ignore[syntax]
+        try:
+            return super(AwsClient, self).keys
+
+        except AwsAccessError as e:
+            # NOTE: Do not raise here, instead just log warning (prevent issues w/ Ape API)
+            logger.warning(str(e))
+            return {}
 
     @property
     def aliases(self) -> Iterator[str]:
