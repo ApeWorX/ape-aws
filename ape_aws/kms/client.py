@@ -3,7 +3,7 @@ from functools import cached_property
 from itertools import chain
 from typing import TYPE_CHECKING, ClassVar
 
-from ape.types import AddressType
+from ape.types import AddressType, HexBytes
 from botocore.exceptions import BotoCoreError  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
@@ -104,8 +104,12 @@ class KmsKey(BaseModel):
         self.cached_alias = alias
 
     @property
-    def public_key(self):
-        return self.kms_client.get_public_key(KeyId=self.id)["PublicKey"]
+    def public_key(self) -> HexBytes:
+        try:
+            return HexBytes(self.kms_client.get_public_key(KeyId=self.id)["PublicKey"][-64:])
+        except (self.kms_client.exceptions.KMSInvalidStateException, BotoCoreError) as e:
+            # NOTE: Handle here since `.keys` is the main access point for the external API
+            raise AwsAccessError(e) from e
 
     @property
     def address(self) -> AddressType:
@@ -114,7 +118,7 @@ class KmsKey(BaseModel):
 
         from eth_utils import keccak, to_checksum_address
 
-        return AddressType(to_checksum_address(keccak(self.public_key[-64:])[-20:].hex().lower()))
+        return AddressType(to_checksum_address(keccak(self.public_key)[-20:]))
 
     def add_tags(self, tags: list[dict[str, str]]):
         self.kms_client.tag_resource(KeyId=self.id, Tags=tags)
