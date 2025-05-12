@@ -4,6 +4,7 @@ from typing import Any, Iterator, Optional
 from ape.api import AccountAPI, AccountContainerAPI, TransactionAPI
 from ape.logging import logger
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
+from eip712 import EIP712Message
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
 from eth_account.messages import _hash_eip191_message, encode_defunct
 from eth_pydantic_types import HexBytes
@@ -74,6 +75,10 @@ class KmsAccount(AccountAPI):
     def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
         if isinstance(msg, SignableMessage):
             message = msg
+
+        elif isinstance(msg, EIP712Message):
+            message = msg.signable_message
+
         elif isinstance(msg, str):
             if msg.startswith("0x"):
                 message = encode_defunct(hexstr=msg)
