@@ -98,7 +98,7 @@ class IamClient(Session):
     KEY_ACCESS_POLICY = dict(
         Sid="ApeAWSv1",
         Effect="Allow",
-        Action=["kms:ListAliases", "kms:Sign", "kms:Verify", "kms:GetPublicKey"],
+        Action=["kms:ListAliases", "kms:Sign", "kms:Verify", "kms:GetPublicKey", "kms:DescribeKey"],
         Resource="*",
     )
 
@@ -115,7 +115,7 @@ class IamClient(Session):
 
         except BotoCoreError as e:
             # NOTE: Handle here since `.users` is the main access point for the external API
-            raise AwsAccessError(e)
+            raise AwsAccessError(e) from e
 
         users = map(IamUser.model_validate, response.get("Users", []))
 
