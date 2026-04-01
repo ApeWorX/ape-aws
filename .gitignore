@@ -119,3 +119,5 @@ version.py
 
 # Ape stuff
 .build/
+
+uv.lock

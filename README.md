@@ -3,7 +3,8 @@
 Ape plugin to make transactions through AWS KMS
 
 ## Dependencies
-- [python3](https://www.python.org/downloads) version 3.10 or greater, python3-dev
+
+- [Python 3](https://www.python.org/downloads) version 3.10 or greater
 
 ## Installation
 
@@ -15,21 +16,26 @@ You can install the latest release via [`pip`](https://pypi.org/project/pip/):
 pip install ape-aws
 ```
 
-### via `setuptools`
+### via `ape`
 
-You can clone the repository and use [`setuptools`](https://github.com/pypa/setuptools) for the most up-to-date version:
+You can also install via `ape`:
+
+```bash
+ape plugins install aws
+```
+
+### via source
+
+You can clone the repository and install for development:
 
 ```bash
 git clone https://github.com/ApeWorX/ape-aws.git
 cd ape-aws
-python3 setup.py install
+uv sync --group dev
+uv run prek install
 ```
 
 ## Quick Usage
-
-```bash
-pip install ape-aws
-```
 
 ### Using CLI tool
 
@@ -81,8 +87,6 @@ To grant your user access to the signing key (don't forget to do this!)
 ape aws keys grant KEY -u USER
 ```
 
-
-
 ### IPython
 
 First, create a KMS key with the CLI tool
@@ -111,31 +115,36 @@ WARNING: Don't forget to cycle your access tokens on a regular basis to prevent 
 
 ## Development
 
-This project is in development and should be considered a beta.
-Things might not be in their final state and breaking changes may occur.
-Comments, questions, criticisms and pull requests are welcomed.
+This project is in development and should be considered a beta. Things might not be in their final
+state and breaking changes may occur. Comments, questions, criticisms and pull requests are
+welcomed.
 
 ## Prerequisites to AWS Setup
 
-To begin, create a virtual environment set up and activate the virtual environment before doing anything for the setup of AWS
+To begin, create a virtual environment set up and activate the virtual environment before doing
+anything for the setup of AWS
 
 1. You must have an AWS account
-2. Must be an AWS Identity and Access Management (IAM) user with administrator access
-3. Must have configured AWS credentials
-4. Must have [Docker](https://docs.docker.com/get-docker/),
+1. Must be an AWS Identity and Access Management (IAM) user with administrator access
+1. Must have configured AWS credentials
+1. Must have [Docker](https://docs.docker.com/get-docker/),
    [Python3](https://www.python.org/downloads/) and
    [pip](https://pip.pypa.io/en/stable/installation/) installed on your workstation
 
 ## AWS Setup
 
 #### For Mac and Linux
+
 Create a `~/.aws` folder in your home directory:
+
 ```bash
 mkdir ~/.aws
 ```
 
-Note: get your access key and key id from your IAM in you AWS account [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html).
-Create a `credentials` file in the `~/.aws` folder:
+Note: get your access key and key id from your IAM in you AWS account
+[here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html). Create a
+`credentials` file in the `~/.aws` folder:
+
 ```bash
 cat <<EOF > ~/.aws/credentials
 [default]
@@ -145,6 +154,7 @@ EOF
 ```
 
 Create a `config` file in the `~/.aws` folder:
+
 ```bash
 cat <<EOF > ~/.aws/config
 [default]
@@ -155,7 +165,8 @@ EOF
 
 ## AWS KMS Key Import Steps
 
-For manual setup, follow this [article](https://aws.amazon.com/blogs/database/import-ethereum-private-keys-to-aws-kms/)
+For manual setup, follow this
+[article](https://aws.amazon.com/blogs/database/import-ethereum-private-keys-to-aws-kms/)
 
 ## License
 

@@ -37,6 +37,8 @@ def kms_account(aws_account_container):
         if account.alias == "plugin-test":
             return account
 
+    pytest.skip("No plugin-test KMS account available for testing")
+
 
 def test_signing_message(kms_account, string_message):
     val = kms_account.sign_message(string_message)
