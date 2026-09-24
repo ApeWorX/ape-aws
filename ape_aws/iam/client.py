@@ -98,7 +98,13 @@ class IamClient(Session):
     KEY_ACCESS_POLICY = {
         "Sid": "ApeAWSv1",
         "Effect": "Allow",
-        "Action": ["kms:ListAliases", "kms:Sign", "kms:Verify", "kms:GetPublicKey", "kms:DescribeKey"],
+        "Action": [
+            "kms:ListAliases",
+            "kms:Sign",
+            "kms:Verify",
+            "kms:GetPublicKey",
+            "kms:DescribeKey",
+        ],
         "Resource": "*",
     }
 
@@ -140,7 +146,9 @@ class IamClient(Session):
     def create_key_policy(self) -> IamPolicy:
         response = self.iam_client.create_policy(
             PolicyName=self.KEY_POLICY_NAME,
-            PolicyDocument=json.dumps({"Version": "2012-10-17", "Statement": [self.KEY_ACCESS_POLICY]}),
+            PolicyDocument=json.dumps(
+                {"Version": "2012-10-17", "Statement": [self.KEY_ACCESS_POLICY]}
+            ),
         )
 
         policy = IamPolicy.model_validate(response["Policy"])

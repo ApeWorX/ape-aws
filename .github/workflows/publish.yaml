@@ -9,11 +9,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    environment:
-      name: pypi
-      url: https://pypi.org/p/ape-aws
-
-    # NOTE: this permission is mandatory for trusted publishing
     permissions:
       id-token: write
 
@@ -28,5 +23,5 @@ jobs:
     - name: Build
       run: uv build
 
-    - name: Publish
+    - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1

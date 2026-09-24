@@ -7,7 +7,8 @@ To get started with working on the codebase, use the following steps prepare you
 git clone https://github.com/ApeWorX/ape-aws.git
 cd ape-aws
 
-# install the developer dependencies
+# install the package and developer dependency groups with uv
+# (https://docs.astral.sh/uv/)
 uv sync --group dev
 ```
 
@@ -40,4 +41,4 @@ If you are opening a work-in-progress pull request to verify that it passes CI t
 consider
 [marking it as a draft](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests).
 
-Join the Ethereum Python [Discord](https://discord.gg/PcEJ54yX) if you have any questions.
+Join the ApeWorX [Discord](https://discord.gg/apeworx) if you have any questions.
