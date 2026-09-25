@@ -125,9 +125,9 @@ To begin, create a virtual environment set up and activate the virtual environme
 anything for the setup of AWS
 
 1. You must have an AWS account
-1. Must be an AWS Identity and Access Management (IAM) user with administrator access
-1. Must have configured AWS credentials
-1. Must have [Docker](https://docs.docker.com/get-docker/),
+2. Must be an AWS Identity and Access Management (IAM) user with administrator access
+3. Must have configured AWS credentials
+4. Must have [Docker](https://docs.docker.com/get-docker/),
    [Python3](https://www.python.org/downloads/) and
    [pip](https://pip.pypa.io/en/stable/installation/) installed on your workstation
 
