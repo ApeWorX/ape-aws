@@ -6,7 +6,6 @@ from ape_aws.client import AwsClient
 
 
 def _click_profile_option(argument_name):
-
     return click.option(
         "-p",
         "--profile",
