@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 from functools import cached_property
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from ape.api import AccountAPI, AccountContainerAPI, TransactionAPI
 from ape.logging import logger
@@ -44,7 +45,7 @@ class AwsAccountContainer(AwsClient, AccountContainerAPI):
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
-        return map(lambda key: KmsAccount(key=key), self.keys.values())
+        return (KmsAccount(key=key) for key in self.keys.values())
 
 
 class KmsAccount(AccountAPI):
@@ -58,7 +59,7 @@ class KmsAccount(AccountAPI):
     def address(self) -> AddressType:
         return self.key.address
 
-    def sign_raw_msghash(self, msghash: HexBytes | Hash32) -> Optional[MessageSignature]:
+    def sign_raw_msghash(self, msghash: HexBytes | Hash32) -> MessageSignature | None:
         if len(msghash) != 32:
             return None
 
@@ -72,7 +73,7 @@ class KmsAccount(AccountAPI):
 
         return msg_sig
 
-    def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
+    def sign_message(self, msg: Any, **_signer_options) -> MessageSignature | None:
         if isinstance(msg, SignableMessage):
             message = msg
 
@@ -91,7 +92,7 @@ class KmsAccount(AccountAPI):
 
         return self.sign_raw_msghash(_hash_eip191_message(message))
 
-    def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
+    def sign_transaction(self, txn: TransactionAPI, **_signer_options) -> TransactionAPI | None:
         """
         Sign an EIP-155 transaction.
         CHECK TYPE 0 transactions.

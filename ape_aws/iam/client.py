@@ -95,12 +95,18 @@ class IamClient(Session):
     """AWS Client API for working with IAM Accounts"""
 
     KEY_POLICY_NAME = "ApeAwsKeyAccessV1"
-    KEY_ACCESS_POLICY = dict(
-        Sid="ApeAWSv1",
-        Effect="Allow",
-        Action=["kms:ListAliases", "kms:Sign", "kms:Verify", "kms:GetPublicKey", "kms:DescribeKey"],
-        Resource="*",
-    )
+    KEY_ACCESS_POLICY = {
+        "Sid": "ApeAWSv1",
+        "Effect": "Allow",
+        "Action": [
+            "kms:ListAliases",
+            "kms:Sign",
+            "kms:Verify",
+            "kms:GetPublicKey",
+            "kms:DescribeKey",
+        ],
+        "Resource": "*",
+    }
 
     @cached_property
     def iam_client(self):
@@ -141,10 +147,7 @@ class IamClient(Session):
         response = self.iam_client.create_policy(
             PolicyName=self.KEY_POLICY_NAME,
             PolicyDocument=json.dumps(
-                dict(
-                    Version="2012-10-17",
-                    Statement=[self.KEY_ACCESS_POLICY],
-                )
+                {"Version": "2012-10-17", "Statement": [self.KEY_ACCESS_POLICY]}
             ),
         )
 

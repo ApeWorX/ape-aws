@@ -119,3 +119,8 @@ version.py
 
 # Ape stuff
 .build/
+
+uv.lock
+
+# ruff
+.ruff_cache/

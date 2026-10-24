@@ -73,6 +73,7 @@ class KmsKey(BaseModel):
     cached_address: str | None = None
 
     @field_validator("cached_alias")
+    @classmethod
     def prune_alias_prepend(cls, value: str):
         return value.replace("alias/ape-aws/v1/", "")
 
@@ -128,14 +129,14 @@ class KmsKey(BaseModel):
         return json.loads(response["Policy"])
 
     @staticmethod
-    def USER_KEY_POLICY(user_arn: str, key_arn: str) -> dict:
-        return dict(
-            Sid="Allow use of a specific key",
-            Effect="Allow",
-            Principal=dict(AWS=user_arn),
-            Action=["kms:Sign", "kms:Verify", "kms:GetPublicKey"],
-            Resource=key_arn,
-        )
+    def user_key_policy(user_arn: str, key_arn: str) -> dict:
+        return {
+            "Sid": "Allow use of a specific key",
+            "Effect": "Allow",
+            "Principal": {"AWS": user_arn},
+            "Action": ["kms:Sign", "kms:Verify", "kms:GetPublicKey"],
+            "Resource": key_arn,
+        }
 
     def set_policy(
         self,
@@ -155,7 +156,7 @@ class KmsKey(BaseModel):
                     break
 
             else:
-                policy["Statement"].append(self.USER_KEY_POLICY(user_arn, self.arn))
+                policy["Statement"].append(self.user_key_policy(user_arn, self.arn))
 
         self.kms_client.put_key_policy(
             KeyId=self.id,
@@ -193,7 +194,7 @@ class KmsClient(Session):
     def keys(self) -> dict[str, KmsKey]:
         # NOTE: Uses aliases to get alias faster (no additional lookups needed)
         paginator = self.kms_client.get_paginator("list_aliases")
-        pages = map(lambda data: data["Aliases"], paginator.paginate())
+        pages = (data["Aliases"] for data in paginator.paginate())
 
         try:
             # NOTE: Use `itertools.chain` since it is segmented into list of lists

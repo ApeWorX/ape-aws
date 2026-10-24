@@ -17,8 +17,8 @@ class AwsClient(IamClient, KmsClient, Session):
     """The fully assembled AWS Client"""
 
     @classmethod
-    def _click_argument_callback(cls, ctx: "Context", arg: str, value: str | None) -> "AwsClient":
+    def _click_argument_callback(cls, _ctx: "Context", _arg: str, value: str | None) -> "AwsClient":
         try:
             return cls(value)
         except ApeAwsException as e:
-            raise click.BadOptionUsage("profile", str(e))
+            raise click.BadOptionUsage("profile", str(e)) from e
